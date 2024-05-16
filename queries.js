@@ -15,6 +15,8 @@ const getImages = (request, response) => {
         }
         response.status(200).json(results.rows)
     })
+    console.log("Alle Bilder wurden abgefragt");
+
 }
 
 const getImageById = (request, response) => {
@@ -26,6 +28,7 @@ const getImageById = (request, response) => {
         }
         response.status(200).json(results.rows)
     })
+    console.log("Bild mit der ID " + imageid + " wurde abgefragt");
 }
 
 const updateImage= (request, response) => {
