@@ -9,12 +9,21 @@ const pool = new Pool({
 })
 
 const getImages = (request, response) => {
-    pool.query('SELECT * FROM images ORDER BY imageid DESC ', (error, results) => {
+    let query = 'SELECT * FROM images';
+
+    // Check for query params
+    if (request.query.public === 'true') {
+        query += ' WHERE public = true';
+    }
+
+    query += ' ORDER BY imageid DESC';
+
+    pool.query(query, (error, results) => {
         if (error) {
-            throw error
+            throw error;
         }
-        response.status(200).json(results.rows)
-    })
+        response.status(200).json(results.rows);
+    });
 }
 
 const getImageById = (request, response) => {
