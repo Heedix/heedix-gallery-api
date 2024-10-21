@@ -3,11 +3,16 @@ const cors = require('cors')
 const app = express();
 const port = 3000
 const db = require('./queries')
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 
 const multer = require('multer');
 const path = require('path');
 
+const JWT_SECRET = 'your_secret_key'; //TODO Secret erstellen
+
 app.options('*', cors())
+app.use(express.json());
 app.use(
     cors({
         origin: "*",
@@ -46,15 +51,68 @@ app.post('/upload', upload.single('image'), (req, res) => {
 // Statische Dateien bereitstellen
 app.use('/uploads', express.static('uploads'));
 
+const users = []; //TODO Löschen
 
 //login
-app.post('/api/auth/login', (req, res) => {
-    const { username, password } = req.body;
-    // Überprüfe den Benutzer in der Datenbank
-    if (username === 'admin' && password === 'admin') {
-        res.status(200).json({ token: 'fake-jwt-token' });
+app.post('/api/auth/login', async (req, res) => {
+    const {username, encryptedPassword} = req.body;
+    console.log(req.body);
+
+    const user = users.find(user => user.username === username);  //TODO Datenbank
+
+    if (user) {
+        // Vergleiche das verschlüsselte Passwort vom Client mit dem gehashten Passwort in der Datenbank
+        const isMatch = await bcrypt.compare(encryptedPassword, user.password);
+
+        if (isMatch) {
+            const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: '1h' });
+            // Wenn das Passwort korrekt ist, erstelle ein Token (hier ein Fake-JWT-Token als Beispiel)
+            res.status(200).json({token});
+        } else {
+            res.status(400).json({message: 'Ungültige Anmeldeinformationen'});
+        }
     } else {
-        res.status(400).json({ message: 'Ungültige Anmeldeinformationen' });
+        res.status(400).json({message: 'Benutzer nicht gefunden'});
+    }
+});
+
+function authenticateToken(req, res, next) {
+    const token = req.headers['authorization']?.split(' ')[1];
+
+    if (!token) {
+        return res.status(401).json({ message: 'Token fehlt' });
+    }
+
+    jwt.verify(token, JWT_SECRET, (err, user) => {
+        if (err) {
+            return res.status(403).json({ message: 'Ungültiger Token' });
+        }
+
+        req.user = user; // Den Benutzer zur Anforderung hinzufügen
+        next();
+    });
+}
+
+app.get('/api/protected', authenticateToken, (req, res) => {
+    res.status(200).json({ message: `Willkommen, ${req.user.username}!` });
+});
+
+
+app.post('/api/register', async (req, res) => {
+    const {email, username, encryptedPassword} = req.body;
+
+    try {
+        const saltRounds = 10;
+        console.log(encryptedPassword);
+        const hashedPassword = await bcrypt.hash(encryptedPassword, saltRounds);
+
+        // Speichere den neuen Benutzer mit dem gehashten Passwort (hier in einem Array simuliert)
+        users.push({email, username, password: hashedPassword}); //TODO Datenbank
+        console.log(users); // Zum Überprüfen der Benutzerdaten
+
+        res.status(200).json({message: 'Registrierung erfolgreich'});
+    } catch (error) {
+        res.status(500).json({message: 'Fehler bei der Registrierung', error});
     }
 });
 
