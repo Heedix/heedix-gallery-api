@@ -1,12 +1,6 @@
 const {request, response} = require("express");
-const Pool = require('pg').Pool
-const pool = new Pool({
-    user: 'admin',
-    host: 'heedix.de',
-    database: 'heedix-gallery',
-    password: 'YaPfgnD2uwY0',
-    port: 5432,
-})
+const dataSource = require('../data-source');
+const pool = dataSource;
 
 const getImages = (request, response) => {
     let query = 'SELECT * FROM images';

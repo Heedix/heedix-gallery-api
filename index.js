@@ -2,7 +2,8 @@ const express = require('express');
 const cors = require('cors')
 const app = express();
 const port = 3000
-const db = require('./queries')
+const imageQuery = require('./queries/images')
+const userQuery = require('./queries/users')
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -21,9 +22,9 @@ app.use(
     })
 );
 
-app.get('/images', db.getImages)
-app.get('/images/:id', db.getImageById)
-app.put('/images/:imageid', db.updateImage)
+app.get('/images', imageQuery.getImages)
+app.get('/images/:id', imageQuery.getImageById)
+app.put('/images/:imageid', imageQuery.updateImage)
 
 
 //Imgae processing
@@ -51,18 +52,16 @@ app.post('/upload', upload.single('image'), (req, res) => {
 // Statische Dateien bereitstellen
 app.use('/uploads', express.static('uploads'));
 
-const users = []; //TODO Löschen
+//const users = []; //TODO Löschen
 
 //login
 app.post('/api/auth/login', async (req, res) => {
     const {username, encryptedPassword} = req.body;
-    console.log(req.body);
 
-    const user = users.find(user => user.username === username);  //TODO Datenbank
+    const user = await userQuery.getUserByUsername(username);
 
     if (user) {
-        // Vergleiche das verschlüsselte Passwort vom Client mit dem gehashten Passwort in der Datenbank
-        const isMatch = await bcrypt.compare(encryptedPassword, user.password);
+        const isMatch = await bcrypt.compare(encryptedPassword, user[0].password);
 
         if (isMatch) {
             const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: '1h' });
@@ -105,6 +104,7 @@ app.post('/api/register', async (req, res) => {
         const saltRounds = 10;
         console.log(encryptedPassword);
         const hashedPassword = await bcrypt.hash(encryptedPassword, saltRounds);
+        console.log(hashedPassword);
 
         // Speichere den neuen Benutzer mit dem gehashten Passwort (hier in einem Array simuliert)
         users.push({email, username, password: hashedPassword}); //TODO Datenbank
