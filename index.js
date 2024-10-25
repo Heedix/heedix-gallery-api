@@ -2,6 +2,8 @@ const express = require('express');
 const cors = require('cors')
 const app = express();
 const port = 3000
+
+
 const imageQuery = require('./queries/images')
 const userQuery = require('./queries/users')
 const bcrypt = require('bcrypt');
@@ -9,6 +11,7 @@ const jwt = require('jsonwebtoken');
 
 const multer = require('multer');
 const path = require('path');
+const e = require("express");
 
 const JWT_SECRET = 'your_secret_key'; //TODO Secret erstellen
 
@@ -22,8 +25,19 @@ app.use(
     })
 );
 
+/**
+ * Route to retrieve all images.
+ */
 app.get('/images', imageQuery.getImages)
+
+/**
+ * Route to retrieve an image by ID.
+ */
 app.get('/images/:id', imageQuery.getImageById)
+
+/**
+ * Route to update an image by ID.
+ */
 app.put('/images/:imageid', imageQuery.updateImage)
 
 
@@ -49,12 +63,12 @@ app.post('/upload', upload.single('image'), (req, res) => {
     res.send({ imageUrl: imageUrl });
 });
 
-// Statische Dateien bereitstellen
 app.use('/uploads', express.static('uploads'));
 
-//const users = []; //TODO Löschen
-
-//login
+/**
+ * Login endpoint to authenticate a user.
+ * Creates a JWT token if authentication is successful.
+ */
 app.post('/api/auth/login', async (req, res) => {
     const {username, encryptedPassword} = req.body;
 
@@ -75,6 +89,13 @@ app.post('/api/auth/login', async (req, res) => {
     }
 });
 
+/**
+ * Middleware to authenticate tokens in protected routes.
+ * Adds the authenticated user to the request if the token is valid.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @param {Function} next - The next middleware function.
+ */
 function authenticateToken(req, res, next) {
     const token = req.headers['authorization']?.split(' ')[1];
 
@@ -92,11 +113,17 @@ function authenticateToken(req, res, next) {
     });
 }
 
+/**
+ * Protected endpoint (accessible only with a valid token).
+ */
 app.get('/api/protected', authenticateToken, (req, res) => {
     res.status(200).json({ message: `Willkommen, ${req.user.username}!` });
 });
 
-
+/**
+ * Registration endpoint to create a new user.
+ * Hashes the password and saves user data to the database.
+ */
 app.post('/api/register', async (req, res) => {
     const {email, username, encryptedPassword} = req.body;
 
@@ -106,17 +133,26 @@ app.post('/api/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(encryptedPassword, saltRounds);
         console.log(hashedPassword);
 
-        // Speichere den neuen Benutzer mit dem gehashten Passwort (hier in einem Array simuliert)
-        users.push({email, username, password: hashedPassword}); //TODO Datenbank
-        console.log(users); // Zum Überprüfen der Benutzerdaten
+        let userId = await userQuery.addUserToDb(email, username, hashedPassword);
 
-        res.status(200).json({message: 'Registrierung erfolgreich'});
+        res.status(200).json({message: 'Registration successful', userId: userId});
     } catch (error) {
-        res.status(500).json({message: 'Fehler bei der Registrierung', error});
+        if (error.detail.includes('username')) {
+            res.status(400).send({ errorCode: 'USERNAME_TAKEN', message: 'This username is already taken.' });
+        } else if (error.detail.includes('email')) {
+            res.status(400).send({ errorCode: 'EMAIL_TAKEN', message: 'This email-address is already taken.' });
+        } else {
+            res.status(500).send({ message: 'An unexpected error occurred .' });
+        }
+        console.log(error.detail);
+
+        //res.status(500).json({message: 'Registration failed', error});
     }
 });
 
-
+/**
+ * Starts the server and listens on the specified port.
+ */
 app.listen(port, () => {
     console.log(`Server started on port ${port}`)
 })

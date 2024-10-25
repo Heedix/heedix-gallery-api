@@ -1,6 +1,5 @@
 const {request, response} = require("express");
-const dataSource = require('../data-source');
-const pool = dataSource;
+const pool = require('../data-source');
 
 const getImages = (request, response) => {
     let query = 'SELECT * FROM images';
