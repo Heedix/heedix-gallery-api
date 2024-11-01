@@ -3,6 +3,9 @@ const cors = require('cors')
 const app = express();
 const port = 3000
 
+require('dotenv').config();
+
+const imageService = require('./services/imageService');
 
 const imageQuery = require('./queries/images')
 const userQuery = require('./queries/users')
@@ -13,7 +16,7 @@ const multer = require('multer');
 const path = require('path');
 const e = require("express");
 
-const JWT_SECRET = 'your_secret_key'; //TODO Secret erstellen
+const JWT_SECRET = process.env.JWT_SECRET //TODO Secret erstellen
 
 app.options('*', cors())
 app.use(express.json());
@@ -28,7 +31,7 @@ app.use(
 /**
  * Route to retrieve all images.
  */
-app.get('/images', imageQuery.getImages)
+app.get('/images', imageService.getAllViewableImages)
 
 /**
  * Route to retrieve an image by ID.
@@ -72,20 +75,23 @@ app.use('/uploads', express.static('uploads'));
 app.post('/api/auth/login', async (req, res) => {
     const {username, encryptedPassword} = req.body;
 
-    const user = await userQuery.getUserByUsername(username);
+    const users = await userQuery.getUserByUsername(username);
+    const user = users[0];
 
     if (user) {
-        const isMatch = await bcrypt.compare(encryptedPassword, user[0].password);
+        const isMatch = await bcrypt.compare(encryptedPassword, user.password);
 
         if (isMatch) {
-            const token = jwt.sign({ username: user.username }, JWT_SECRET, { expiresIn: '1h' });
-            // Wenn das Passwort korrekt ist, erstelle ein Token (hier ein Fake-JWT-Token als Beispiel)
+            const token = jwt.sign({ sub: user.userid, username: user.username}, JWT_SECRET, { expiresIn: '1h' });
+            console.log(jwt.decode(token))
             res.status(200).json({token});
         } else {
-            res.status(400).json({message: 'Ungültige Anmeldeinformationen'});
+            res.status(400).json({errorCode: 'CREDENTIALS_INVALID', message: 'Username or password is incorrect.'});
+            console.log('Password is wrong.')
         }
     } else {
-        res.status(400).json({message: 'Benutzer nicht gefunden'});
+        res.status(400).json({errorCode: 'CREDENTIALS_INVALID', message: 'Username or password is incorrect.'});
+        console.error('User not found')
     }
 });
 
@@ -137,10 +143,10 @@ app.post('/api/register', async (req, res) => {
 
         res.status(200).json({message: 'Registration successful', userId: userId});
     } catch (error) {
-        if (error.detail.includes('username')) {
-            res.status(400).send({ errorCode: 'USERNAME_TAKEN', message: 'This username is already taken.' });
-        } else if (error.detail.includes('email')) {
+        if (error.detail.includes('email')) {
             res.status(400).send({ errorCode: 'EMAIL_TAKEN', message: 'This email-address is already taken.' });
+        } else if (error.detail.includes('username')) {
+            res.status(400).send({ errorCode: 'USERNAME_TAKEN', message: 'This username is already taken.' });
         } else {
             res.status(500).send({ message: 'An unexpected error occurred .' });
         }

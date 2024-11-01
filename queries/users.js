@@ -2,12 +2,22 @@ const {request, response} = require("express");
 const pool = require('../data-source');
 
 const getUserByUsername = (username) => {
-    return pool.query('SELECT * FROM users WHERE username = $1', [username])
+    return pool.query('SELECT * FROM users WHERE LOWER(username) = LOWER($1)', [username])
         .then(results => results.rows)
         .catch(error => {
             throw error
         })
 }
+
+const getUserById = async (userId) => {
+    try {
+        const results = await pool.query('SELECT * FROM users WHERE userid = $1', [userId]);
+        return results.rows;
+    } catch (error) {
+        throw error;
+    }
+}
+
 
 const addUserToDb = async (email, username, password) => {
     const client = await pool.connect();
@@ -32,5 +42,6 @@ const addUserToDb = async (email, username, password) => {
 
 module.exports = {
     getUserByUsername,
+    getUserById,
     addUserToDb
 }
