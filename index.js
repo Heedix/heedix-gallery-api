@@ -6,6 +6,7 @@ const port = 3000
 require('dotenv').config();
 
 const imageService = require('./services/imageService');
+const storageService = require('./services/storageService');
 
 const imageQuery = require('./queries/images')
 const userQuery = require('./queries/users')
@@ -14,9 +15,8 @@ const jwt = require('jsonwebtoken');
 
 const multer = require('multer');
 const path = require('path');
-const e = require("express");
 
-const JWT_SECRET = process.env.JWT_SECRET //TODO Secret erstellen
+const JWT_SECRET = process.env.JWT_SECRET
 
 app.options('*', cors())
 app.use(express.json());
@@ -41,7 +41,7 @@ app.get('/images/:id', imageQuery.getImageById)
 /**
  * Route to update an image by ID.
  */
-app.put('/images/:imageid', imageQuery.updateImage)
+//app.put('/images/:imageid', imageQuery.updateImage)
 
 
 //Imgae processing
@@ -66,7 +66,7 @@ app.post('/upload', upload.single('image'), (req, res) => {
     res.send({ imageUrl: imageUrl });
 });
 
-app.use('/uploads', express.static('uploads'));
+app.get('/uploads/:filename', storageService.showImageByName);
 
 /**
  * Login endpoint to authenticate a user.
@@ -83,7 +83,6 @@ app.post('/api/auth/login', async (req, res) => {
 
         if (isMatch) {
             const token = jwt.sign({ sub: user.userid, username: user.username}, JWT_SECRET, { expiresIn: '1h' });
-            console.log(jwt.decode(token))
             res.status(200).json({token});
         } else {
             res.status(400).json({errorCode: 'CREDENTIALS_INVALID', message: 'Username or password is incorrect.'});
