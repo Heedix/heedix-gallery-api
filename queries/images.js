@@ -1,6 +1,5 @@
 const {request, response} = require("express");
 const pool = require('../data-source');
-const jwt = require('jsonwebtoken');
 const results = require("pg/lib/query");
 
 /**
@@ -32,15 +31,15 @@ async function getAllImages() {
  * @throws {Error} If an error occurs during the database query.
  */
 async function getViewableImages(userId) {
-    let query = `
+    const query = `
         SELECT *
         FROM images
         WHERE public = true
-        OR owner = $1
-        OR $2 = ANY(viewers)
+           OR owner = $1
+           OR $1 = ANY (viewers)
     `;
     try {
-        const results = await pool.query(query, [userId, userId]);
+        const results = await pool.query(query, [userId]);
         return results.rows;
     } catch (error) {
         throw error;
@@ -54,7 +53,7 @@ async function getViewableImages(userId) {
  * @throws {Error} If an error occurs during the database query.
  */
 async function getPublicImages() {
-    let query = `
+    const query = `
         SELECT *
         FROM images
         WHERE public = true
@@ -63,7 +62,23 @@ async function getPublicImages() {
         const results = await pool.query(query);
         return results.rows;
     } catch (error) {
-        throw error;
+        console.error(error);
+    }
+}
+
+async function isImageViewable(source, userId) {
+    const query = `
+        SELECT source
+        FROM images
+        WHERE source = $1
+          AND (($2 = ANY (viewers) or owner = $2) OR public = true)
+    `;
+    try {
+        const result = await pool.query(query, [source, userId]);
+        return !!result.rows[0];
+    } catch (error) {
+        console.error(error);
+        return false
     }
 }
 
@@ -108,6 +123,7 @@ module.exports = {
     getAllImages,
     getPublicImages,
     getViewableImages,
+    isImageViewable,
     getImageById
     //updateImage
 }

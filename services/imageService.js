@@ -2,8 +2,8 @@ const jwt = require("jsonwebtoken");
 
 const imageQuery = require("../queries/images");
 const userQuery = require("../queries/users");
-
-const JWT_SECRET = process.env.JWT_SECRET;
+const authService = require("./authService");
+const path = require("path");
 
 /**
  * Fetches all images viewable by the requesting user based on their permission level.
@@ -16,33 +16,19 @@ const JWT_SECRET = process.env.JWT_SECRET;
  * @param {Object} request - The HTTP request object, expected to contain an authorization header.
  * @param {Object} response - The HTTP response object used to return image data.
  */
-const getAllViewableImages = async (request, response) => {
-    if (request.headers['authorization'] && request.headers['authorization'].startsWith('Bearer ')) {
-        let authKey = request.headers['authorization'].replace('Bearer ', '');
-        jwt.verify(authKey, JWT_SECRET, async (err) => {
-            if (err) {
-                let publicImages = await imageQuery.getPublicImages();
-                response.status(200).json(publicImages);
+
+const getAllViewableImages =  async (request, response) => {
+    await authService.authorizeToken(request.headers.authorization).then(async result => {
+        if (result.status === 'error') {
+            response.status(200).json(await imageQuery.getPublicImages());
+        } else {
+            if (result.permissionLevel > 5) {
+                response.status(200).json(await imageQuery.getAllImages());
             } else {
-                try {
-                    const decoded = jwt.decode(authKey);
-                    let decodedUsers = await userQuery.getUserById(decoded.sub);
-                    let decodedUser = decodedUsers[0];
-                    if(decodedUser.permissionlevel > 5) {
-                        response.status(200).json(await imageQuery.getAllImages());
-                    } else {
-                        response.status(200).json(await imageQuery.getViewableImages(decodedUser.userid));
-                    }
-                } catch (err) {
-                    console.log(err);
-                    response.status(400).json({errorCode: 'TOKEN_DECODE',message: 'Token could not be decoded'});
-                }
+                response.status(200).json(await imageQuery.getViewableImages(result.userId));
             }
-        });
-    } else {
-        let publicImages = await imageQuery.getPublicImages();
-        response.status(200).json(publicImages);
-    }
+        }
+    });
 }
 
 /**
