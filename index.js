@@ -31,12 +31,16 @@ app.use(
 /**
  * Route to retrieve all images.
  */
-app.get('/images', imageService.getAllViewableImages)
+app.get('/images', imageService.getAllViewableImages);
 
 /**
  * Route to retrieve an image by ID.
  */
-app.get('/images/:id', imageQuery.getImageById)
+//app.get('/images/:id', imageQuery.getImageById);
+
+app.get('/api/images/:filename', storageService.getSignedImage);
+
+app.get('/api/getSignedImageUrl/:filename', storageService.getSignedImageUrl);
 
 /**
  * Route to update an image by ID.

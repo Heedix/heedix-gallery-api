@@ -35,6 +35,28 @@ async function authorizeToken(token) {
     }
 }
 
+async function getSingleUseToken(filename) {
+    const expiresIn = 60 * 60;
+    return await jwt.sign(
+        {filename, exp: Math.floor(Date.now() / 1000) + expiresIn},
+        JWT_SECRET
+    );
+}
+
+async function isSingleUseTokenValid(token, filename) {
+    return new Promise((resolve, reject) => {
+        jwt.verify(token, JWT_SECRET, (err, decoded) => {
+            if (err || decoded.filename !== filename) {
+                resolve(false);
+            } else {
+                resolve(true);
+            }
+        });
+    });
+}
+
 module.exports = {
-    authorizeToken
+    authorizeToken,
+    getSingleUseToken,
+    isSingleUseTokenValid
 }

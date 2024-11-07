@@ -6,6 +6,7 @@ const pool = require("../data-source");
 const {join} = require("node:path");
 const path = require('path');
 const {isImageViewable} = require("../queries/images");
+const fs = require("node:fs");
 
 const showImageByName = async (request, response) => {
     const filename = request.params.filename;
@@ -26,6 +27,56 @@ const showImageByName = async (request, response) => {
     })
 }
 
+const getSignedImageUrl = async (req, res) => {
+    const filename = req.params.filename;
+
+    await authService.authorizeToken(req.headers.authorization).then(async result => {
+        if (result.status === 'error') {
+            if (await imageQuery.isImageViewable(filename, null)) {
+                await authService.getSingleUseToken(filename).then(result => {
+                    const signedUrl = `${req.protocol}://${req.get('host')}/api/images/${filename}?token=${result}`;
+                    res.json({signedUrl});
+                })
+            } else {
+                res.status(400).json({message: 'Access denied'});
+            }
+        } else {
+            if (result.permissionLevel > 5 || await imageQuery.isImageViewable(filename, result.userId)) {
+                await authService.getSingleUseToken(filename).then(result => {
+                    const signedUrl = `${req.protocol}://${req.get('host')}/api/images/${filename}?token=${result}`;
+                    res.json({signedUrl});
+                })
+            } else {
+                res.status(400).json({message: 'Access denied'});
+            }
+        }
+    })
+}
+
+const getSignedImage = async (req, res) => {
+    const filename = req.params.filename;
+    const token = req.query.token;
+
+    await authService.isSingleUseTokenValid(token, filename).then(result => {
+        if (result) {
+            const imagePath = path.join(__dirname, '../uploads', filename);
+
+            fs.access(imagePath, fs.constants.F_OK, (err) => {
+                if (err) {
+                    return res.status(404).json({message: 'Image not found'});
+                }
+                res.status(200).sendFile(imagePath);
+            });
+        } else {
+            res.status(400).json({message: 'Token invalid, please try getting a new access token'});
+        }
+    })
+}
+
+
+
 module.exports = {
-    showImageByName
+    showImageByName,
+    getSignedImageUrl,
+    getSignedImage
 }
