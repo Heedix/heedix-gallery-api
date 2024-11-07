@@ -5,7 +5,6 @@ const authService = require("../services/authService");
 const pool = require("../data-source");
 const {join} = require("node:path");
 const path = require('path');
-const {isImageViewable} = require("../queries/images");
 const fs = require("node:fs");
 
 const showImageByName = async (request, response) => {
@@ -57,8 +56,8 @@ const getSignedImage = async (req, res) => {
     const filename = req.params.filename;
     const token = req.query.token;
 
-    await authService.isSingleUseTokenValid(token, filename).then(result => {
-        if (result) {
+    await authService.isSingleUseTokenValid(token, filename).then(async result => {
+        if (result || await imageQuery.isImageViewable(filename, null)) {
             const imagePath = path.join(__dirname, '../uploads', filename);
 
             fs.access(imagePath, fs.constants.F_OK, (err) => {
