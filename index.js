@@ -7,6 +7,7 @@ require('dotenv').config();
 
 const imageService = require('./services/imageService');
 const storageService = require('./services/storageService');
+const loginRegisterService = require('./services/loginRegisterService')
 
 const imageQuery = require('./queries/images')
 const userQuery = require('./queries/users')
@@ -33,19 +34,13 @@ app.use(
  */
 app.get('/images', imageService.getAllViewableImages);
 
-/**
- * Route to retrieve an image by ID.
- */
-//app.get('/images/:id', imageQuery.getImageById);
-
 app.get('/api/images/:filename', storageService.getSignedImage);
 
 app.get('/api/getSignedImageUrl/:filename', storageService.getSignedImageUrl);
 
-/**
- * Route to update an image by ID.
- */
-//app.put('/images/:imageid', imageQuery.updateImage)
+app.get('/api/account/images', imageService.getAccountImages)
+
+//app.get('/api/account/folders', folderService.getAccountFolders) TODO
 
 
 //Imgae processing
@@ -76,88 +71,13 @@ app.get('/uploads/:filename', storageService.showImageByName);
  * Login endpoint to authenticate a user.
  * Creates a JWT token if authentication is successful.
  */
-app.post('/api/auth/login', async (req, res) => {
-    const {username, encryptedPassword} = req.body;
-
-    const users = await userQuery.getUserByUsername(username);
-    const user = users[0];
-
-    if (user) {
-        const isMatch = await bcrypt.compare(encryptedPassword, user.password);
-
-        if (isMatch) {
-            const token = jwt.sign({ sub: user.userid, username: user.username}, JWT_SECRET, { expiresIn: '1h' });
-            res.status(200).json({token});
-        } else {
-            res.status(400).json({errorCode: 'CREDENTIALS_INVALID', message: 'Username or password is incorrect.'});
-            console.log('Password is wrong.')
-        }
-    } else {
-        res.status(400).json({errorCode: 'CREDENTIALS_INVALID', message: 'Username or password is incorrect.'});
-        console.error('User not found')
-    }
-});
-
-/**
- * Middleware to authenticate tokens in protected routes.
- * Adds the authenticated user to the request if the token is valid.
- * @param {Object} req - The request object.
- * @param {Object} res - The response object.
- * @param {Function} next - The next middleware function.
- */
-function authenticateToken(req, res, next) {
-    const token = req.headers['authorization']?.split(' ')[1];
-
-    if (!token) {
-        return res.status(401).json({ message: 'Token fehlt' });
-    }
-
-    jwt.verify(token, JWT_SECRET, (err, user) => {
-        if (err) {
-            return res.status(403).json({ message: 'Ungültiger Token' });
-        }
-
-        req.user = user; // Den Benutzer zur Anforderung hinzufügen
-        next();
-    });
-}
-
-/**
- * Protected endpoint (accessible only with a valid token).
- */
-app.get('/api/protected', authenticateToken, (req, res) => {
-    res.status(200).json({ message: `Willkommen, ${req.user.username}!` });
-});
+app.post('/api/auth/login', loginRegisterService.login);
 
 /**
  * Registration endpoint to create a new user.
  * Hashes the password and saves user data to the database.
  */
-app.post('/api/register', async (req, res) => {
-    const {email, username, encryptedPassword} = req.body;
-
-    try {
-        const saltRounds = 10;
-        console.log(encryptedPassword);
-        const hashedPassword = await bcrypt.hash(encryptedPassword, saltRounds);
-        console.log(hashedPassword);
-
-        let userId = await userQuery.addUserToDb(email, username, hashedPassword);
-
-        res.status(200).json({message: 'Registration successful', userId: userId});
-    } catch (error) {
-        if (error.detail.includes('email')) {
-            res.status(400).send({ errorCode: 'EMAIL_TAKEN', message: 'This email-address is already taken.' });
-        } else if (error.detail.includes('username')) {
-            res.status(400).send({ errorCode: 'USERNAME_TAKEN', message: 'This username is already taken.' });
-        } else {
-            res.status(500).send({ message: 'An unexpected error occurred .' });
-        }
-        console.log(error.detail);
-
-        //res.status(500).json({message: 'Registration failed', error});
-    }
-});
+app.post('/api/register', loginRegisterService.register);
 
 /**
  * Starts the server and listens on the specified port.

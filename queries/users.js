@@ -33,7 +33,6 @@ const addUserToDb = async (email, username, password) => {
         console.log("User added with ID:", result.rows[0].userid);
         return result.rows[0];
     } catch (error) {
-        //console.error("Error adding user:", error);
         throw error;
     } finally {
         client.release();

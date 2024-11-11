@@ -34,7 +34,7 @@ async function getViewableImages(userId) {
     const query = `
         SELECT *
         FROM images
-        WHERE public = true
+        WHERE visibility = 'Public'
            OR owner = $1
            OR $1 = ANY (viewers)
     `;
@@ -56,7 +56,7 @@ async function getPublicImages() {
     const query = `
         SELECT *
         FROM images
-        WHERE public = true
+        WHERE visibility = 'Public'
     `;
     try {
         const results = await pool.query(query);
@@ -71,7 +71,7 @@ async function isImageViewable(source, userId) {
         SELECT source
         FROM images
         WHERE source = $1
-          AND (($2 = ANY (viewers) or owner = $2) OR public = true)
+          AND (($2 = ANY (viewers) or owner = $2) OR visibility = 'Public')
     `;
     try {
         const result = await pool.query(query, [source, userId]);
@@ -116,6 +116,35 @@ const getImageById = (request, response) => {
     })
 }*/
 
+async function getAccountImages(userId) {
+    const query = `
+        SELECT source, downloads, visibility, uploaddate, username
+        FROM images left join users on images.owner = users.userid
+        WHERE visibility = 'Public'
+           OR owner = $1
+           OR $1 = ANY (viewers)
+    `;
+    try {
+        const results = await pool.query(query, [userId]);
+        return results.rows;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+async function getAllAccountImages() {
+    const query = `
+        SELECT source, downloads, visibility, uploaddate, username
+        FROM images left join users on images.owner = users.userid
+    `;
+    try {
+        const results = await pool.query(query);
+        return results.rows;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
 /**
  * Exports the functions for retrieving and updating images for use in other modules.
  */
@@ -124,6 +153,8 @@ module.exports = {
     getPublicImages,
     getViewableImages,
     isImageViewable,
-    getImageById
-    //updateImage
+    getImageById,
+    getAccountImages,
+    getAllAccountImages
+    //updateImage}
 }

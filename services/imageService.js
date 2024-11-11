@@ -31,9 +31,24 @@ const getAllViewableImages =  async (request, response) => {
     });
 }
 
+const getAccountImages = async (request, response) => {
+    await authService.authorizeToken(request.headers.authorization).then(async result => {
+        if (result.status === 'error') {
+            response.status(400).json({message: 'Access denied'});
+        } else {
+            if (result.permissionLevel > 5) {
+                response.status(200).json(await imageQuery.getAllAccountImages());
+            } else {
+                response.status(200).json(await imageQuery.getAccountImages(result.userId));
+            }
+        }
+    });
+}
+
 /**
  * Exports the function for retrieving viewable images for use in other modules.
  */
 module.exports = {
-    getAllViewableImages
+    getAllViewableImages,
+    getAccountImages
 }
