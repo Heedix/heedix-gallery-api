@@ -118,7 +118,7 @@ const getImageById = (request, response) => {
 
 async function getAccountImages(userId) {
     const query = `
-        SELECT source, downloads, visibility, uploaddate, username
+        SELECT name, source, downloads, visibility, uploaddate, username
         FROM images left join users on images.owner = users.userid
         WHERE visibility = 'Public'
            OR owner = $1
@@ -134,7 +134,7 @@ async function getAccountImages(userId) {
 
 async function getAllAccountImages() {
     const query = `
-        SELECT source, downloads, visibility, uploaddate, username
+        SELECT name, source, downloads, visibility, uploaddate, username
         FROM images left join users on images.owner = users.userid
     `;
     try {

@@ -8,6 +8,7 @@ require('dotenv').config();
 const imageService = require('./services/imageService');
 const storageService = require('./services/storageService');
 const loginRegisterService = require('./services/loginRegisterService')
+const folderService = require('./services/folderService')
 
 const imageQuery = require('./queries/images')
 const userQuery = require('./queries/users')
@@ -40,7 +41,7 @@ app.get('/api/getSignedImageUrl/:filename', storageService.getSignedImageUrl);
 
 app.get('/api/account/images', imageService.getAccountImages)
 
-//app.get('/api/account/folders', folderService.getAccountFolders) TODO
+app.get('/api/account/folders', folderService.getAccountFolders)
 
 
 //Imgae processing
