@@ -14,7 +14,7 @@ const login = async(req, res) => {
 
         if (isMatch) {
             const token = jwt.sign({ sub: user.userid, username: user.username}, JWT_SECRET, { expiresIn: '3h' });
-            res.status(200).json({token});
+            res.status(200).json({token: token, username: user.username});
         } else {
             res.status(400).json({errorCode: 'CREDENTIALS_INVALID', message: 'Username or password is incorrect.'});
             console.log('Password is wrong.')
