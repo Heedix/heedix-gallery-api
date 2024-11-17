@@ -1,6 +1,9 @@
 const bcrypt = require("bcrypt");
 const userQuery = require("../queries/users");
 const jwt = require("jsonwebtoken");
+const authService = require("./authService");
+const imageQuery = require("../queries/images");
+const path = require("path");
 
 
 const login = async(req, res) => {
@@ -49,7 +52,18 @@ const register = async(req, res) => {
     }
 }
 
+const authorizeToken = async(request, response) => {
+    await authService.authorizeToken(request.headers.authorization).then(async result => {
+        if (result.status === 'error') {
+            response.status(400).json({message: 'Token is invalid'});
+        } else {
+            response.status(200).json({message: 'Token in valid', userId: result.userId});
+        }
+    })
+}
+
 module.exports = {
     login,
-    register
+    register,
+    authorizeToken
 }

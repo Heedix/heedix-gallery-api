@@ -28,6 +28,7 @@ async function authorizeToken(token) {
         return {
             status: "success",
             userId: decodedUser.userid,
+            username: decodedUser.username,
             permissionLevel: decodedUser.permissionlevel,
         };
     } catch (error) {

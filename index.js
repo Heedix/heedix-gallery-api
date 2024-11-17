@@ -43,6 +43,8 @@ app.get('/api/account/images', imageService.getAccountImages)
 
 app.get('/api/account/folders', folderService.getAccountFolders)
 
+app.use('/api/account/profile-picture', express.static(path.join(__dirname, 'uploads/profile-pictures')));
+
 
 //Imgae processing
 
@@ -79,6 +81,8 @@ app.post('/api/auth/login', loginRegisterService.login);
  * Hashes the password and saves user data to the database.
  */
 app.post('/api/register', loginRegisterService.register);
+
+app.get('/api/auth/authorize', loginRegisterService.authorizeToken);
 
 /**
  * Starts the server and listens on the specified port.

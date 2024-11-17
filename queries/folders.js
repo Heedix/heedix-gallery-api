@@ -1,7 +1,7 @@
 const pool = require("../data-source");
 
 
-async function getAccountFolders() {
+async function getAccountFolders(userId) {
     const query = `
         SELECT name, thumbnailsource, visibility, creationdate, username
         FROM folders left join users on folders.owner = users.userid
@@ -10,7 +10,7 @@ async function getAccountFolders() {
            OR $1 = ANY (viewers)
     `;
     try {
-        const results = await pool.query(query);
+        const results = await pool.query(query, [userId]);
         return results.rows;
     } catch (error) {
         console.error(error);
