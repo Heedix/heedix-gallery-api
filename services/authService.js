@@ -3,7 +3,7 @@ const imageQuery = require("../queries/images");
 const path = require("path");
 const userQuery = require("../queries/users");
 const {isImageViewable} = require("../queries/images");
-JWT_SECRET = process.env.JWT_SECRET;
+const JWT_SECRET = process.env.JWT_SECRET;
 
 async function authorizeToken(token) {
     let authKey = null;
