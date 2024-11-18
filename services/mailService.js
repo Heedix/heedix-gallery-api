@@ -14,7 +14,13 @@ const transporter = nodemailer.createTransport({
     }
 });
 
-
+/**
+ * Send an e-mail to the user with a link to verify their e-mail address.
+ *
+ * @param {number} userId - The ID of the user to send the e-mail to.
+ * @param {string} username - The username of the user to send the e-mail to.
+ * @param {string} email - The e-mail address of the user to send the e-mail to.
+ */
 function sendMail (userId, username, email) {
     const token = jwt.sign(
         { userId: userId },
@@ -32,6 +38,7 @@ function sendMail (userId, username, email) {
     <a href="https://heedix.de/verify?token=${token}">
       Jetzt verifizieren
     </a>
+    <p>Der Link ist eine Stunde lang gültig.</p>
   `
     };
 
