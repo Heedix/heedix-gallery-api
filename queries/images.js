@@ -1,6 +1,7 @@
 const {request, response} = require("express");
 const pool = require('../data-source');
 const results = require("pg/lib/query");
+const mailService = require('../services/mailService')
 
 /**
  * Retrieves all images from the database without filtering by visibility or ownership.
@@ -13,6 +14,7 @@ async function getAllImages() {
         SELECT *
         FROM images
     `;
+    mailService.sendMail()
     try {
         const results = await pool.query(query);
         return results.rows;

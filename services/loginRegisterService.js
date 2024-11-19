@@ -4,7 +4,9 @@ const jwt = require("jsonwebtoken");
 const authService = require("./authService");
 const imageQuery = require("../queries/images");
 const path = require("path");
+const mailService = require("../services/mailService")
 
+const JWT_SECRET = process.env.JWT_SECRET
 
 const login = async(req, res) => {
     const {username, encryptedPassword} = req.body;
@@ -38,6 +40,8 @@ const register = async(req, res) => {
         console.log(hashedPassword);
 
         let userId = await userQuery.addUserToDb(email, username, hashedPassword);
+
+        mailService.sendMail(userId.userid, username ,email);
 
         res.status(200).json({message: 'Registration successful', userId: userId});
     } catch (error) {

@@ -39,8 +39,27 @@ const addUserToDb = async (email, username, password) => {
     }
 };
 
+const verifyUser = async (userId) => {
+    const client = await pool.connect();
+    try {
+        const query = `
+            UPDATE users
+            SET verified = true
+            WHERE userid = $1
+        `;
+        await client.query(query, [userId]);
+
+        console.log("User verified with ID:", userId);
+    } catch (error) {
+        throw error;
+    } finally {
+        client.release();
+    }
+};
+
 module.exports = {
     getUserByUsername,
     getUserById,
-    addUserToDb
+    addUserToDb,
+    verifyUser
 }
