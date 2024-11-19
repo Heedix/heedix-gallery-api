@@ -9,6 +9,7 @@ const imageService = require('./services/imageService');
 const storageService = require('./services/storageService');
 const loginRegisterService = require('./services/loginRegisterService')
 const folderService = require('./services/folderService')
+const emailVerificationService = require('./services/emailVerificationService')
 
 const imageQuery = require('./queries/images')
 const userQuery = require('./queries/users')
@@ -81,6 +82,8 @@ app.post('/api/auth/login', loginRegisterService.login);
  * Hashes the password and saves user data to the database.
  */
 app.post('/api/register', loginRegisterService.register);
+
+app.get('/verify', emailVerificationService.verifyEmail);
 
 app.get('/api/auth/authorize', loginRegisterService.authorizeToken);
 

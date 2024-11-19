@@ -1,4 +1,5 @@
 const nodemailer = require('nodemailer');
+
 const JWT_SECRET = process.env.JWT_SECRET;
 const MAIL_PASSWORD =  process.env.MAIL_PASSWORD;
 
@@ -23,7 +24,7 @@ const transporter = nodemailer.createTransport({
  */
 function sendMail (userId, username, email) {
     const token = jwt.sign(
-        { userId: userId },
+        { sub: userId },
         JWT_SECRET,
         { expiresIn: '1h' }
     );
@@ -35,12 +36,12 @@ function sendMail (userId, username, email) {
         html: `
     <h3>${username} Verifiziere deine E-Mail</h3>
     <p>Klicke auf den folgenden Link, um deine E-Mail zu verifizieren:</p>
-    <a href="https://heedix.de/verify?token=${token}">
+    <a href="http://localhost:4200/verify?token=${token}">
       Jetzt verifizieren
     </a>
     <p>Der Link ist eine Stunde lang gültig.</p>
   `
-    };
+    };//TODO ändern zu url
 
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {

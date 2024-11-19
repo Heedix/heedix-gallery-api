@@ -5,6 +5,7 @@ const authService = require("./authService");
 const imageQuery = require("../queries/images");
 const path = require("path");
 const mailService = require("../services/mailService")
+
 const JWT_SECRET = process.env.JWT_SECRET
 
 const login = async(req, res) => {
@@ -40,7 +41,7 @@ const register = async(req, res) => {
 
         let userId = await userQuery.addUserToDb(email, username, hashedPassword);
 
-        mailService.sendMail(userId, username ,email);
+        mailService.sendMail(userId.userid, username ,email);
 
         res.status(200).json({message: 'Registration successful', userId: userId});
     } catch (error) {
