@@ -36,27 +36,27 @@ const uploadImage = (req, res) => {
 }
 
 function getFileMetaData(file) {
-    let requstData = [
-        {key: 'Image Height', },
-        'Image Width',
-        'Bits Per Sample',
-        'Make',
-        'Model',
-        'ExposureTime',
-        'FNumber',
-        'ISOSpeedRatings',
-        'DateTimeOriginal',
-        'ColorSpace',
-        'WhiteBalance',
-        'FocalLength',
-        'FocalLengthIn35mmFilm',
-        'LensModel'
+    let requestData = [
+        {key: 'height', tag: 'Image Height', method: 'value' },
+        {key: 'width', tag: 'Image Width', method: 'value' },
+        {key: 'bitsPerSample', tag: 'Bits Per Sample', method: 'description' },
+        {key: 'make', tag: 'Make', method: 'description' },
+        {key: 'model', tag: 'Model', method: 'description' },
+        {key: 'exposureTime', tag: 'ExposureTime', method: 'description' },
+        {key: 'fNumber', tag: 'FNumber', method: 'description' },
+        {key: 'isoSpeedRatings', tag: 'ISOSpeedRatings', method: 'description' },
+        {key: 'dateTimeOriginal', tag: 'DateTimeOriginal', method: 'value' },
+        {key: 'colorSpace', tag: 'ColorSpace', method: 'description' },
+        {key: 'whiteBalance', tag: 'WhiteBalance', method: 'description' },
+        {key: 'focalLength', tag: 'FocalLength', method: 'description' },
+        {key: 'focalLengthIn35mmFilm', tag: 'FocalLengthIn35mmFilm', method: 'description' },
+        {key: 'lensModel', tag: 'LensModel', method: 'description' }
     ]
     const tags = ExifReader.load(file.buffer);
     console.log(tags);
-    for (const key of requstData) {
+    for (const key of requestData) {
         try {
-            console.log(tags[key].description);
+            console.log(tags[key.tag][key.method]);
         } catch (error) {
             console.log('No Data');
         }
