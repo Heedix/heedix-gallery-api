@@ -93,9 +93,9 @@ async function isImageViewable(source, userId) {
  * @param {Object} response - The HTTP response object used to return the image data.
  */
 const getImageById = (request, response) => {
-    const imageid = parseInt(request.params.id)
+    const image_id = parseInt(request.params.id)
 
-    pool.query('SELECT * FROM images WHERE imageid = $1', [imageid], (error, results) => {
+    pool.query('SELECT * FROM images WHERE image_id = $1', [image_id], (error, results) => {
         if (error) {
             throw error
         }
@@ -120,7 +120,7 @@ const getImageById = (request, response) => {
 
 async function getAccountImages(userId) {
     const query = `
-        SELECT name, source, downloads, visibility, uploaddate, username
+        SELECT name, source, downloads, visibility, upload_date, username
         FROM images left join users on images.owner = users.userid
         WHERE visibility = 'Public'
            OR owner = $1
@@ -136,7 +136,7 @@ async function getAccountImages(userId) {
 
 async function getAllAccountImages() {
     const query = `
-        SELECT name, source, downloads, visibility, uploaddate, username
+        SELECT name, source, downloads, visibility, upload_date, username
         FROM images left join users on images.owner = users.userid
     `;
     try {
@@ -146,6 +146,70 @@ async function getAllAccountImages() {
         console.error(error);
     }
 }
+
+const addImageToDb = async (extractedData, userId) => {
+    const client = await pool.connect();
+    try {
+        const query = `
+            INSERT INTO images (name,
+                                size,
+                                height,
+                                width,
+                                bits_per_sample,
+                                make,
+                                model,
+                                exposure_time,
+                                f_number,
+                                iso,
+                                creation_date_time,
+                                color_space,
+                                white_balance,
+                                focal_length,
+                                focal_length_equivalent,
+                                lens_model,
+                                owner,
+                                upload_date
+            )
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW())
+            RETURNING image_id
+        `;
+        const values = [
+            extractedData.filename,
+            extractedData.fileSize,
+            extractedData.height,
+            extractedData.width,
+            extractedData.bitsPerSample,
+            extractedData.make,
+            extractedData.model,
+            extractedData.exposureTime,
+            extractedData.fNumber,
+            extractedData.isoSpeedRatings,
+            extractedData.dateTimeOriginal,
+            extractedData.colorSpace,
+            extractedData.whiteBalance,
+            extractedData.focalLength,
+            extractedData.focalLengthIn35mmFilm,
+            extractedData.lensModel,
+            userId
+        ];
+        const result = await client.query(query, values);
+
+        updateQuery = `
+            UPDATE images
+            SET source = $2
+            WHERE image_id = $1
+        `;
+        await client.query(updateQuery, [result, result + extractedData.fileExt]);
+
+        console.log("User added with ID:", result.rows[0].userid);
+        return result.rows[0];
+    } catch (error) {
+        throw error;
+    } finally {
+        client.release();
+    }
+};
+
 
 /**
  * Exports the functions for retrieving and updating images for use in other modules.
@@ -157,6 +221,7 @@ module.exports = {
     isImageViewable,
     getImageById,
     getAccountImages,
-    getAllAccountImages
+    getAllAccountImages,
+    addImageToDb
     //updateImage}
 }

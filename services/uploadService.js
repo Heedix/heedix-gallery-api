@@ -2,6 +2,8 @@ const multer = require("multer");
 const path = require("path");
 const ExifReader = require('exifreader');
 
+const imageQuery = require('../queries/images');
+
 const storage = multer.diskStorage({
     destination: function (req, file, cb) {
         cb(null, 'uploads/'); // Speicherort
@@ -35,31 +37,42 @@ const uploadImage = (req, res) => {
     });
 }
 
-function getFileMetaData(file) {
+async function getFileMetaData(file) {
     let requestData = [
-        {key: 'height', tag: 'Image Height', method: 'value' },
-        {key: 'width', tag: 'Image Width', method: 'value' },
-        {key: 'bitsPerSample', tag: 'Bits Per Sample', method: 'description' },
-        {key: 'make', tag: 'Make', method: 'description' },
-        {key: 'model', tag: 'Model', method: 'description' },
-        {key: 'exposureTime', tag: 'ExposureTime', method: 'description' },
-        {key: 'fNumber', tag: 'FNumber', method: 'description' },
-        {key: 'isoSpeedRatings', tag: 'ISOSpeedRatings', method: 'description' },
-        {key: 'dateTimeOriginal', tag: 'DateTimeOriginal', method: 'value' },
-        {key: 'colorSpace', tag: 'ColorSpace', method: 'description' },
-        {key: 'whiteBalance', tag: 'WhiteBalance', method: 'description' },
-        {key: 'focalLength', tag: 'FocalLength', method: 'description' },
-        {key: 'focalLengthIn35mmFilm', tag: 'FocalLengthIn35mmFilm', method: 'description' },
-        {key: 'lensModel', tag: 'LensModel', method: 'description' }
-    ]
+        {key: 'height', tag: 'Image Height', method: 'value'},
+        {key: 'width', tag: 'Image Width', method: 'value'},
+        {key: 'bitsPerSample', tag: 'Bits Per Sample', method: 'description'},
+        {key: 'make', tag: 'Make', method: 'description'},
+        {key: 'model', tag: 'Model', method: 'description'},
+        {key: 'exposureTime', tag: 'ExposureTime', method: 'description'},
+        {key: 'fNumber', tag: 'FNumber', method: 'description'},
+        {key: 'isoSpeedRatings', tag: 'ISOSpeedRatings', method: 'description'},
+        {key: 'dateTimeOriginal', tag: 'DateTimeOriginal', method: 'description'},
+        {key: 'colorSpace', tag: 'ColorSpace', method: 'description'},
+        {key: 'whiteBalance', tag: 'WhiteBalance', method: 'description'},
+        {key: 'focalLength', tag: 'FocalLength', method: 'description'},
+        {key: 'focalLengthIn35mmFilm', tag: 'FocalLengthIn35mmFilm', method: 'description'},
+        {key: 'lensModel', tag: 'LensModel', method: 'description'}
+    ];
+
     const tags = ExifReader.load(file.buffer);
-    console.log(tags);
+
+    let extractedData = [];
+
+    extractedData.fileExt = path.extname(file.originalname);
+    extractedData.fileName = file.originalname;
+    extractedData.fileSize = file.size;
     for (const key of requestData) {
         try {
-            console.log(tags[key.tag][key.method]);
+            extractedData[key.key] = tags[key.tag][key.method] //push({key: key.key, value: tags[key.tag][key.method]});
         } catch (error) {
-            console.log('No Data');
+            extractedData[key.key] = 'N/A';
         }
+    }
+    try {
+        const result = await imageQuery.addImageToDb(extractedData, '82e06593-f64b-4dfa-bd33-7d2b5ee3f86b');
+    } catch (error) {
+        console.error(error);
     }
 }
 
