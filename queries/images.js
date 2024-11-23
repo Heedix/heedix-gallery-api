@@ -14,7 +14,6 @@ async function getAllImages() {
         SELECT *
         FROM images
     `;
-    mailService.sendMail()
     try {
         const results = await pool.query(query);
         return results.rows;
@@ -151,30 +150,34 @@ const addImageToDb = async (extractedData, userId) => {
     const client = await pool.connect();
     try {
         const query = `
-            INSERT INTO images (name,
-                                size,
-                                height,
-                                width,
-                                bits_per_sample,
-                                make,
-                                model,
-                                exposure_time,
-                                f_number,
-                                iso,
-                                creation_date_time,
-                                color_space,
-                                white_balance,
-                                focal_length,
-                                focal_length_equivalent,
-                                lens_model,
-                                owner,
-                                upload_date
+            INSERT INTO images (
+                name,
+                size,
+                height,
+                width,
+                bits_per_sample,
+                make,
+                model,
+                exposure_time,
+                f_number,
+                iso,
+                creation_date_time,
+                color_space,
+                white_balance,
+                focal_length,
+                focal_length_equivalent,
+                lens_model,
+                owner,
+                upload_date_time,
+                source
             )
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW())
-            RETURNING image_id
+            VALUES (
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW(), $18
+            )
+            RETURNING image_id;
         `;
         const values = [
-            extractedData.filename,
+            extractedData.fileName,
             extractedData.fileSize,
             extractedData.height,
             extractedData.width,
@@ -190,18 +193,21 @@ const addImageToDb = async (extractedData, userId) => {
             extractedData.focalLength,
             extractedData.focalLengthIn35mmFilm,
             extractedData.lensModel,
-            userId
+            userId,
+            extractedData.fileExt
         ];
         const result = await client.query(query, values);
 
-        updateQuery = `
+        const imageId = result.rows[0].image_id;
+
+        const updateQuery = `
             UPDATE images
             SET source = $2
             WHERE image_id = $1
         `;
-        await client.query(updateQuery, [result, result + extractedData.fileExt]);
+        await client.query(updateQuery, [imageId, imageId + extractedData.fileExt]);
 
-        console.log("User added with ID:", result.rows[0].userid);
+        console.log("User added with ID:", imageId);
         return result.rows[0];
     } catch (error) {
         throw error;

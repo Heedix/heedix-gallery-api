@@ -14,14 +14,20 @@ const storage = multer.diskStorage({
 });
 
 // Route für den Upload
-const uploadImage = (req, res) => {
+const uploadImage = async (req, res) => {
     if (!req.file) {
         return res.status(400).send('No file uploaded.');
     }
 
     // Perform operations on the image buffer (req.file.buffer) here
 
-    getFileMetaData(req.file);
+    const extractedData = await getFileMetaData(req.file);
+
+    try {
+        const result = await imageQuery.addImageToDb(extractedData, '82e06593-f64b-4dfa-bd33-7d2b5ee3f86b');
+    } catch (error) {
+        console.error(error);
+    }
 
     const fileExt = path.extname(req.file.originalname);
     const filename = Date.now() + fileExt;
@@ -69,11 +75,8 @@ async function getFileMetaData(file) {
             extractedData[key.key] = 'N/A';
         }
     }
-    try {
-        const result = await imageQuery.addImageToDb(extractedData, '82e06593-f64b-4dfa-bd33-7d2b5ee3f86b');
-    } catch (error) {
-        console.error(error);
-    }
+    extractedData.dateTimeOriginal = extractedData.dateTimeOriginal.replace(/:/, '-').replace(/:/, '-');
+    return extractedData;
 }
 
 module.exports = {
