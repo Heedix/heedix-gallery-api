@@ -1,17 +1,10 @@
 const multer = require("multer");
 const path = require("path");
 const ExifReader = require('exifreader');
+const sharp = require('sharp');
+
 
 const imageQuery = require('../queries/images');
-
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/'); // Speicherort
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname)); // Dateiname
-    }
-});
 
 // Route für den Upload
 const uploadImage = async (req, res) => {
@@ -23,24 +16,17 @@ const uploadImage = async (req, res) => {
 
     const extractedData = await getFileMetaData(req.file);
 
+
+
     try {
         const result = await imageQuery.addImageToDb(extractedData, '82e06593-f64b-4dfa-bd33-7d2b5ee3f86b');
+
+        await storeImage(req.file, result.image_id)
+
     } catch (error) {
         console.error(error);
     }
 
-    const fileExt = path.extname(req.file.originalname);
-    const filename = Date.now() + fileExt;
-    const filePath = path.join(__dirname, '../uploads/', filename);
-
-    // Save the processed image to disk
-    require('fs').writeFile(filePath, req.file.buffer, (err) => {
-        if (err) {
-            return res.status(500).send('Error saving the file.');
-        }
-        const imageUrl = `http://localhost:3000/uploads/${filename}`;
-        res.send({imageUrl: imageUrl});
-    });
 }
 
 async function getFileMetaData(file) {
@@ -53,7 +39,6 @@ async function getFileMetaData(file) {
         {key: 'exposureTime', tag: 'ExposureTime', method: 'description'},
         {key: 'fNumber', tag: 'FNumber', method: 'description'},
         {key: 'isoSpeedRatings', tag: 'ISOSpeedRatings', method: 'description'},
-        {key: 'dateTimeOriginal', tag: 'DateTimeOriginal', method: 'description'},
         {key: 'colorSpace', tag: 'ColorSpace', method: 'description'},
         {key: 'whiteBalance', tag: 'WhiteBalance', method: 'description'},
         {key: 'focalLength', tag: 'FocalLength', method: 'description'},
@@ -70,13 +55,76 @@ async function getFileMetaData(file) {
     extractedData.fileSize = file.size;
     for (const key of requestData) {
         try {
-            extractedData[key.key] = tags[key.tag][key.method] //push({key: key.key, value: tags[key.tag][key.method]});
+            extractedData[key.key] = tags[key.tag][key.method];
         } catch (error) {
-            extractedData[key.key] = 'N/A';
+            extractedData[key.key] = null;
         }
     }
-    extractedData.dateTimeOriginal = extractedData.dateTimeOriginal.replace(/:/, '-').replace(/:/, '-');
+    try {
+        extractedData.dateTimeOriginal = extractedData.dateTimeOriginal.replace(/:/, '-').replace(/:/, '-');
+    } catch (error) {}
     return extractedData;
+}
+
+async function storeImage(file, imageId) {
+
+    const uploadDir = path.join(__dirname, '../uploads');
+    //            const filePath = path.join(__dirname, '../uploads/', filename);
+
+    const fileExt = path.extname(file.originalname);
+    const filename = imageId + fileExt;
+    const filePath = path.join(uploadDir, filename);
+
+    // Save the processed image to disk
+
+
+    require('fs').writeFile(filePath, file.buffer, async (err) => {
+        if (err) {
+        }
+
+        try {
+
+            const fileExt = path.extname(file.originalname);
+            const fileName = imageId + fileExt;
+
+            const originalPath = path.join(uploadDir, fileName);
+
+            // Original speichern
+            await sharp(file.buffer).toFile(filePath);
+
+            // Definiere verschiedene Größen
+            const sizes = [
+                { folder: 'small', width: 300 },
+                { folder: 'medium', width: 500 },
+                { folder: 'large', width: 1000 },
+            ];
+
+            const resizedImagePaths = [];
+
+            // Iteriere über die Größen und speichere jede Version
+            for (const size of sizes) {
+                const resizedPath = path.join(uploadDir, size.folder , fileName);
+
+                await sharp(file.buffer)
+                    .resize({ width: size.width })
+                    .toFile(resizedPath);
+
+                resizedImagePaths.push({
+                    size: size.suffix,
+                    url: `http://localhost:3000/uploads/${fileName}`,
+                });
+            }
+
+            // URL für das Original und die Größen zurückgeben
+            /*res.send({
+                original: `http://localhost:3000/uploads/${fileName}`,
+                sizes: resizedImagePaths,
+            });*/
+        } catch (error) {
+            console.error(error);
+        }
+    });
+
 }
 
 module.exports = {
