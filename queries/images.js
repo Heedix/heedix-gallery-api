@@ -102,24 +102,9 @@ const getImageById = (request, response) => {
     })
 }
 
-/*const updateImage= (request, response) => {
-    const imageId = parseInt(request.params.imageid);
-    const downloads = parseInt(request.params.downloads);
-    const visible = request.params.visible;
-
-    pool.query('UPDATE images SET downloads = $1, visible = $2 WHERE imageid = $3',
-        [downloads, visible, imageId],
-    (error, results) => {
-        if (error) {
-            throw error
-        }
-        response.status(200).send(`User modified with ID: ${imageId}`)
-    })
-}*/
-
 async function getAccountImages(userId) {
     const query = `
-        SELECT name, source, downloads, visibility, upload_date, username
+        SELECT name, source, downloads, visibility, upload_date_time, username
         FROM images left join users on images.owner = users.userid
         WHERE visibility = 'Public'
            OR owner = $1
@@ -135,7 +120,7 @@ async function getAccountImages(userId) {
 
 async function getAllAccountImages() {
     const query = `
-        SELECT name, source, downloads, visibility, upload_date, username
+        SELECT name, source, downloads, visibility, upload_date_time, username
         FROM images left join users on images.owner = users.userid
     `;
     try {
@@ -207,7 +192,7 @@ const addImageToDb = async (extractedData, userId) => {
         `;
         await client.query(updateQuery, [imageId, imageId + extractedData.fileExt]);
 
-        console.log("User added with ID:", imageId);
+        console.log("Image added with ID:", imageId);
         return result.rows[0];
     } catch (error) {
         throw error;
@@ -229,5 +214,4 @@ module.exports = {
     getAccountImages,
     getAllAccountImages,
     addImageToDb
-    //updateImage}
 }

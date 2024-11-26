@@ -5,27 +5,32 @@ const sharp = require('sharp');
 
 
 const imageQuery = require('../queries/images');
+const userQuery = require('../queries/users');
+const authService = require("./authService");
 
-// Route für den Upload
 const uploadImage = async (req, res) => {
-    if (!req.file) {
-        return res.status(400).send('No file uploaded.');
-    }
+    await authService.authorizeToken(req.headers.authorization).then(async result => {
+        if (result.status === 'error') {
+            res.status(400).json({message: 'Access denied'});
+        } else {
+            if (await userQuery.isUserVerified(result.userId)) {
+                if (!req.file) {
+                    return res.status(400).send('No file uploaded.');
+                }
+                const extractedData = await getFileMetaData(req.file);
+                try {
+                    const dbResult = await imageQuery.addImageToDb(extractedData, result.userId);
 
-    // Perform operations on the image buffer (req.file.buffer) here
-
-    const extractedData = await getFileMetaData(req.file);
-
-
-
-    try {
-        const result = await imageQuery.addImageToDb(extractedData, '82e06593-f64b-4dfa-bd33-7d2b5ee3f86b');
-
-        await storeImage(req.file, result.image_id)
-
-    } catch (error) {
-        console.error(error);
-    }
+                    await storeImage(req.file, dbResult.image_id)
+                    res.status(200).json({message: 'Image uploaded successfully.'});
+                } catch (error) {
+                    console.error(error);
+                }
+            } else {
+                res.status(400).json({message: 'You need to verify your email address first.'});
+            }
+        }
+    })
 
 }
 
@@ -62,21 +67,17 @@ async function getFileMetaData(file) {
     }
     try {
         extractedData.dateTimeOriginal = extractedData.dateTimeOriginal.replace(/:/, '-').replace(/:/, '-');
-    } catch (error) {}
+    } catch (error) {
+    }
     return extractedData;
 }
 
 async function storeImage(file, imageId) {
-
     const uploadDir = path.join(__dirname, '../uploads');
-    //            const filePath = path.join(__dirname, '../uploads/', filename);
 
     const fileExt = path.extname(file.originalname);
     const filename = imageId + fileExt;
     const filePath = path.join(uploadDir, filename);
-
-    // Save the processed image to disk
-
 
     require('fs').writeFile(filePath, file.buffer, async (err) => {
         if (err) {
@@ -87,39 +88,22 @@ async function storeImage(file, imageId) {
             const fileExt = path.extname(file.originalname);
             const fileName = imageId + fileExt;
 
-            const originalPath = path.join(uploadDir, fileName);
-
-            // Original speichern
             await sharp(file.buffer).toFile(filePath);
 
-            // Definiere verschiedene Größen
             const sizes = [
-                { folder: 'small', width: 300 },
-                { folder: 'medium', width: 500 },
-                { folder: 'large', width: 1000 },
+                {folder: 'small', width: 300},
+                {folder: 'medium', width: 500},
+                {folder: 'large', width: 1000},
             ];
 
-            const resizedImagePaths = [];
-
-            // Iteriere über die Größen und speichere jede Version
             for (const size of sizes) {
-                const resizedPath = path.join(uploadDir, size.folder , fileName);
+                const resizedPath = path.join(uploadDir, size.folder, fileName);
 
                 await sharp(file.buffer)
-                    .resize({ width: size.width })
+                    .resize({width: size.width})
                     .toFile(resizedPath);
 
-                resizedImagePaths.push({
-                    size: size.suffix,
-                    url: `http://localhost:3000/uploads/${fileName}`,
-                });
             }
-
-            // URL für das Original und die Größen zurückgeben
-            /*res.send({
-                original: `http://localhost:3000/uploads/${fileName}`,
-                sizes: resizedImagePaths,
-            });*/
         } catch (error) {
             console.error(error);
         }
@@ -130,24 +114,3 @@ async function storeImage(file, imageId) {
 module.exports = {
     uploadImage
 };
-
-/*
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/'); // Speicherort
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname)); // Dateiname
-    }
-});
-
-const upload = multer({ storage: storage });
-
-// Route für den Upload
-app.post('/upload', upload.single('image'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).send('No file uploaded.');
-    }
-    const imageUrl = `http://localhost:3000/uploads/${req.file.filename}`; //TODO ändern zu url
-    res.send({ imageUrl: imageUrl });
-});*/

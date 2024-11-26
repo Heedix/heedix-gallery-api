@@ -39,6 +39,22 @@ const addUserToDb = async (email, username, password) => {
     }
 };
 
+const isUserVerified = async (userId) => {
+    try {
+        const query = `
+            SELECT verified 
+            FROM users 
+            WHERE userid = $1
+        `;
+        const results = await pool.query(query, [userId]);
+        let returnValue;
+        results.rows[0] ? returnValue = results.rows[0].verified : returnValue = false;
+        return returnValue;
+    } catch (error) {
+        throw error;
+    }
+};
+
 const verifyUser = async (userId) => {
     const client = await pool.connect();
     try {
@@ -61,5 +77,6 @@ module.exports = {
     getUserByUsername,
     getUserById,
     addUserToDb,
+    isUserVerified,
     verifyUser
 }
