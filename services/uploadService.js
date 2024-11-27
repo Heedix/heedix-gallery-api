@@ -15,7 +15,9 @@ const uploadImage = async (req, res) => {
         } else {
             if (await userQuery.isUserVerified(result.userId)) {
                 if (!req.file) {
-                    return res.status(400).send('No file uploaded.');
+                    return res.status(400).json({message: 'No file uploaded.'});
+                } else if (path.extname(req.file.originalname) !== '.jpg' && path.extname(req.file.originalname) !== '.jpeg' && path.extname(req.file.originalname) !== '.png') {
+                    return res.status(400).json({message: 'File is not an image.'});
                 }
                 const extractedData = await getFileMetaData(req.file);
                 try {
@@ -51,7 +53,10 @@ async function getFileMetaData(file) {
         {key: 'lensModel', tag: 'LensModel', method: 'description'}
     ];
 
-    const tags = ExifReader.load(file.buffer);
+    let tags;
+    try {
+        tags = ExifReader.load(file.buffer);
+    } catch (error) {}
 
     let extractedData = [];
 
@@ -67,8 +72,7 @@ async function getFileMetaData(file) {
     }
     try {
         extractedData.dateTimeOriginal = extractedData.dateTimeOriginal.replace(/:/, '-').replace(/:/, '-');
-    } catch (error) {
-    }
+    } catch (error) {}
     return extractedData;
 }
 

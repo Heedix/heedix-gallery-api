@@ -11,8 +11,7 @@ const JWT_SECRET = process.env.JWT_SECRET
 const login = async(req, res) => {
     const {username, encryptedPassword} = req.body;
 
-    const users = await userQuery.getUserByUsername(username);
-    const user = users[0];
+    const user = await userQuery.getUserByUsername(username);
 
     if (user) {
         const isMatch = await bcrypt.compare(encryptedPassword, user.password);
