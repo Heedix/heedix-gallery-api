@@ -10,6 +10,7 @@ const storageService = require('./services/storageService');
 const loginRegisterService = require('./services/loginRegisterService')
 const folderService = require('./services/folderService')
 const emailVerificationService = require('./services/emailVerificationService')
+const uploadService = require('./services/uploadService')
 
 const imageQuery = require('./queries/images')
 const userQuery = require('./queries/users')
@@ -20,6 +21,9 @@ const multer = require('multer');
 const path = require('path');
 
 const JWT_SECRET = process.env.JWT_SECRET
+
+const storage = multer.memoryStorage();
+const upload = multer({ storage: storage });
 
 app.options('*', cors())
 app.use(express.json());
@@ -46,28 +50,7 @@ app.get('/api/account/folders', folderService.getAccountFolders)
 
 app.use('/api/account/profile-picture', express.static(path.join(__dirname, 'uploads/profile-pictures')));
 
-
-//Imgae processing
-
-const storage = multer.diskStorage({
-    destination: function (req, file, cb) {
-        cb(null, 'uploads/'); // Speicherort
-    },
-    filename: function (req, file, cb) {
-        cb(null, Date.now() + path.extname(file.originalname)); // Dateiname
-    }
-});
-
-const upload = multer({ storage: storage });
-
-// Route für den Upload
-app.post('/upload', upload.single('image'), (req, res) => {
-    if (!req.file) {
-        return res.status(400).send('No file uploaded.');
-    }
-    const imageUrl = `http://localhost:3000/uploads/${req.file.filename}`; //TODO ändern zu url
-    res.send({ imageUrl: imageUrl });
-});
+app.post('/upload', upload.single('image'), uploadService.uploadImage);
 
 app.get('/uploads/:filename', storageService.showImageByName);
 

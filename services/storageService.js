@@ -6,6 +6,7 @@ const pool = require("../data-source");
 const {join} = require("node:path");
 const path = require('path');
 const fs = require("node:fs");
+const {query} = require("express");
 
 const showImageByName = async (request, response) => {
     const filename = request.params.filename;
@@ -54,11 +55,17 @@ const getSignedImageUrl = async (req, res) => {
 
 const getSignedImage = async (req, res) => {
     const filename = req.params.filename;
-    const token = req.query.token;
+    const {token, size} = req.query;
 
     await authService.isSingleUseTokenValid(token, filename).then(async result => {
         if (result || await imageQuery.isImageViewable(filename, null)) {
-            const imagePath = path.join(__dirname, '../uploads', filename);
+            let imagePath;
+            if (size === 'small' || size === 'medium' || size === 'large') {
+                imagePath = path.join(__dirname, '../uploads', size, filename);
+            } else {
+                imagePath = path.join(__dirname, '../uploads', filename);
+            }
+
 
             fs.access(imagePath, fs.constants.F_OK, (err) => {
                 if (err) {

@@ -3,9 +3,9 @@ const pool = require('../data-source');
 
 const getUserByUsername = (username) => {
     return pool.query('SELECT * FROM users WHERE LOWER(username) = LOWER($1)', [username])
-        .then(results => results.rows)
+        .then(results => results.rows[0])
         .catch(error => {
-            throw error
+            console.log(error)
         })
 }
 
@@ -14,7 +14,7 @@ const getUserById = async (userId) => {
         const results = await pool.query('SELECT * FROM users WHERE userid = $1', [userId]);
         return results.rows;
     } catch (error) {
-        throw error;
+        console.log(error)
     }
 }
 
@@ -33,9 +33,25 @@ const addUserToDb = async (email, username, password) => {
         console.log("User added with ID:", result.rows[0].userid);
         return result.rows[0];
     } catch (error) {
-        throw error;
+        console.log(error)
     } finally {
         client.release();
+    }
+};
+
+const isUserVerified = async (userId) => {
+    try {
+        const query = `
+            SELECT verified 
+            FROM users 
+            WHERE userid = $1
+        `;
+        const results = await pool.query(query, [userId]);
+        let returnValue;
+        results.rows[0] ? returnValue = results.rows[0].verified : returnValue = false;
+        return returnValue;
+    } catch (error) {
+        console.log(error)
     }
 };
 
@@ -51,7 +67,7 @@ const verifyUser = async (userId) => {
 
         console.log("User verified with ID:", userId);
     } catch (error) {
-        throw error;
+        console.log(error)
     } finally {
         client.release();
     }
@@ -61,5 +77,6 @@ module.exports = {
     getUserByUsername,
     getUserById,
     addUserToDb,
+    isUserVerified,
     verifyUser
 }
