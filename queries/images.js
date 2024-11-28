@@ -201,6 +201,21 @@ const addImageToDb = async (extractedData, userId) => {
     }
 };
 
+const removeImageById = async (imageId) => {
+    const client = await pool.connect();
+    try {
+        const query = `
+            DELETE FROM images
+            WHERE image_id = $1
+        `;
+        await client.query(query, [imageId]);
+    } catch (error) {
+        console.error(error);
+    } finally {
+        client.release();
+    }
+};
+
 
 /**
  * Exports the functions for retrieving and updating images for use in other modules.
@@ -213,5 +228,6 @@ module.exports = {
     getImageById,
     getAccountImages,
     getAllAccountImages,
-    addImageToDb
+    addImageToDb,
+    removeImageById
 }

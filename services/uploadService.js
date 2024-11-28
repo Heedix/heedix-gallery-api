@@ -16,17 +16,23 @@ const uploadImage = async (req, res) => {
             if (await userQuery.isUserVerified(result.userId)) {
                 if (!req.file) {
                     return res.status(400).json({message: 'No file uploaded.'});
-                } else if (path.extname(req.file.originalname) !== '.jpg' && path.extname(req.file.originalname) !== '.jpeg' && path.extname(req.file.originalname) !== '.png') {
+                } else if (
+                    path.extname(req.file.originalname) !== '.jpg' &&
+                    path.extname(req.file.originalname) !== '.jpeg' &&
+                    path.extname(req.file.originalname) !== '.png') {
                     return res.status(400).json({message: 'File is not an image.'});
                 }
-                const extractedData = await getFileMetaData(req.file);
                 try {
+                    const extractedData = await getFileMetaData(req.file);
                     const dbResult = await imageQuery.addImageToDb(extractedData, result.userId);
 
-                    await storeImage(req.file, dbResult.image_id)
-                    res.status(200).json({message: 'Image uploaded successfully.'});
+                    const storingResult = await storeImage(req.file, dbResult.image_id);
+                    if (storingResult) {
+                        res.status(200).json({message: 'Image uploaded successfully.'});
+                    }
                 } catch (error) {
                     console.error(error);
+                    res.status(500).json({message: 'An error occurred while uploading the image.'});
                 }
             } else {
                 res.status(400).json({message: 'You need to verify your email address first.'});
@@ -83,36 +89,50 @@ async function storeImage(file, imageId) {
     const filename = imageId + fileExt;
     const filePath = path.join(uploadDir, filename);
 
-    require('fs').writeFile(filePath, file.buffer, async (err) => {
-        if (err) {
-        }
-
-        try {
-
-            const fileExt = path.extname(file.originalname);
-            const fileName = imageId + fileExt;
-
-            await sharp(file.buffer).toFile(filePath);
-
-            const sizes = [
-                {folder: 'small', width: 300},
-                {folder: 'medium', width: 500},
-                {folder: 'large', width: 1000},
-            ];
-
-            for (const size of sizes) {
-                const resizedPath = path.join(uploadDir, size.folder, fileName);
-
-                await sharp(file.buffer)
-                    .resize({width: size.width})
-                    .toFile(resizedPath);
-
+    return new Promise((resolve, reject) => {
+        require('fs').writeFile(filePath, file.buffer, async (err) => {
+            if (err) {
+                reject(false);
             }
-        } catch (error) {
-            console.error(error);
-        }
-    });
 
+            try {
+                const fileExt = path.extname(file.originalname);
+                const fileName = imageId + fileExt;
+
+                await sharp(file.buffer).toFile(filePath);
+
+                const sizes = [
+                    {folder: 'small', width: 300},
+                    {folder: 'medium', width: 500},
+                    {folder: 'large', width: 1000},
+                ];
+
+                for (const size of sizes) {
+                    const resizedPath = path.join(uploadDir, size.folder, fileName);
+
+                    await sharp(file.buffer)
+                        .resize({width: size.width})
+                        .toFile(resizedPath);
+                }
+                resolve(true);
+            } catch (error) {
+                const sizes = [
+                    {folder: '', width: 0},
+                    {folder: 'small', width: 300},
+                    {folder: 'medium', width: 500},
+                    {folder: 'large', width: 1000},
+                ];
+
+                for (const size of sizes) {
+                    const filePathToRemove = path.join(uploadDir, size.folder, imageId + path.extname(file.originalname));
+                    require('fs').unlink(filePathToRemove, (err) => {});
+                }
+                await imageQuery.removeImageById(imageId);
+                console.error(error);
+                reject(false);
+            }
+        });
+    });
 }
 
 module.exports = {
