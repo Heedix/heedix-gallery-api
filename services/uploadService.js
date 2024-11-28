@@ -26,10 +26,8 @@ const uploadImage = async (req, res) => {
                     const extractedData = await getFileMetaData(req.file);
                     const dbResult = await imageQuery.addImageToDb(extractedData, result.userId);
 
-                    const storingResult = await storeImage(req.file, dbResult.image_id);
-                    if (storingResult) {
-                        res.status(200).json({message: 'Image uploaded successfully.'});
-                    }
+                    await storeImage(req.file, dbResult.image_id);
+                    res.status(200).json({message: 'Image uploaded successfully.'});
                 } catch (error) {
                     console.error(error);
                     res.status(500).json({message: 'An error occurred while uploading the image.'});
