@@ -38,7 +38,7 @@ app.use(
 /**
  * Route to retrieve all images.
  */
-app.get('/images', imageService.getAllViewableImages);
+app.get('api/images', imageService.getAllViewableImages);
 
 app.get('/api/images/:filename', storageService.getSignedImage);
 
@@ -50,9 +50,9 @@ app.get('/api/account/folders', folderService.getAccountFolders)
 
 app.use('/api/account/profile-picture', express.static(path.join(__dirname, 'uploads/profile-pictures')));
 
-app.post('/upload', upload.single('image'), uploadService.uploadImage);
+app.post('/api/upload', upload.single('image'), uploadService.uploadImage);
 
-app.get('/uploads/:filename', storageService.showImageByName);
+app.get('/api/uploads/:filename', storageService.showImageByName);
 
 /**
  * Login endpoint to authenticate a user.
@@ -66,7 +66,7 @@ app.post('/api/auth/login', loginRegisterService.login);
  */
 app.post('/api/register', loginRegisterService.register);
 
-app.get('/verify', emailVerificationService.verifyEmail);
+app.get('/api/verify', emailVerificationService.verifyEmail);
 
 app.get('/api/auth/authorize', loginRegisterService.authorizeToken);
 
