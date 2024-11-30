@@ -38,7 +38,7 @@ app.use(
 /**
  * Route to retrieve all images.
  */
-app.get('api/images', imageService.getAllViewableImages);
+app.get('/api/images', imageService.getAllViewableImages);
 
 app.get('/api/images/:filename', storageService.getSignedImage);
 
