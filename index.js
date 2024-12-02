@@ -68,6 +68,8 @@ app.post('/api/register', loginRegisterService.register);
 
 app.get('/api/verify', emailVerificationService.verifyEmail);
 
+app.get('api/auth/email-verify', emailVerificationService.verifyEmail);
+
 app.get('/api/auth/authorize', loginRegisterService.authorizeToken);
 
 /**

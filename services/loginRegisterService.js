@@ -65,8 +65,19 @@ const authorizeToken = async(request, response) => {
     })
 }
 
+const emailVerified = async(req, res) => {
+    await authService.authorizeToken(res.headers.authorization).then(async result => {
+        if (result.status === 'error') {
+            res.status(400).json({message: 'Token is invalid'});
+        } else {
+            res.status(200).json({message: 'Email verification status', userId: await userQuery.isUserVerified(result.userId)});
+        }
+    })
+}
+
 module.exports = {
     login,
     register,
-    authorizeToken
+    authorizeToken,
+    emailVerified
 }
