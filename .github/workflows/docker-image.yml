@@ -40,6 +40,6 @@ jobs:
       - name: Test SSH connection
         run: ssh -v ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "exit"
       - name: Connect and Pull
-        run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} && docker-compose pull && docker-compose up -d && exit"
+        run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "echo ${{ secrets.PAT }} | docker login ghcr.io -u heedix --password-stdin && cd ${{ secrets.WORK_DIR }} && docker-compose pull && docker-compose up -d && exit"
       - name: Clean up
         run: rm -rf ~/.ssh
