@@ -13,4 +13,6 @@ const pool = new Pool({
     port: DB_PORT,
 })
 
+console.log(pool)
+
 module.exports = pool
