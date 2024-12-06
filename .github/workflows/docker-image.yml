@@ -42,7 +42,8 @@ jobs:
       - name: Connect and Pull
         run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "echo ${{ secrets.PAT }} | docker login ghcr.io -u heedix --password-stdin &&
           cd ${{ secrets.WORK_DIR }} &&
-          echo ${{ secrets.ENV }} > .env
+          echo -e ${{ secrets.ENV }} > .env
+          cat ${{ secrets.WORK_DIR }}/.env &&
           docker-compose pull &&
           docker-compose --env-file .env up -d &&
           exit"
