@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const DB_USER = process.env.DB_USER;
 const DB_HOST = process.env.DB_HOST;
 const DB_DATABASE = process.env.DB_DATABASE;
@@ -14,6 +16,7 @@ const pool = new Pool({
 })
 
 console.log(pool)
+console.log(process.env)
 console.log('DB_USER: ' + DB_USER)
 console.log('DB_HOST: ' + DB_HOST)
 console.log('DB_DATABASE: ' + DB_DATABASE)
