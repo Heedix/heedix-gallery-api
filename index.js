@@ -40,39 +40,39 @@ app.use(
 /**
  * Route to retrieve all images.
  */
-app.get('/${version}/images', imageService.getAllViewableImages);
+app.get(`/${version}/images`, imageService.getAllViewableImages);
 
-app.get('/${version}/images/:filename', storageService.getSignedImage);
+app.get(`/${version}/images/:filename`, storageService.getSignedImage);
 
-app.get('/${version}/getSignedImageUrl/:filename', storageService.getSignedImageUrl);
+app.get(`/${version}/getSignedImageUrl/:filename`, storageService.getSignedImageUrl);
 
-app.get('/${version}/account/images', imageService.getAccountImages)
+app.get(`/${version}/account/images`, imageService.getAccountImages)
 
-app.get('/${version}/account/folders', folderService.getAccountFolders)
+app.get(`/${version}/account/folders`, folderService.getAccountFolders)
 
-app.use('/${version}/account/profile-picture', express.static(path.join(__dirname, 'uploads/profile-pictures')));
+app.use(`/${version}/account/profile-picture`, express.static(path.join(__dirname, `uploads/profile-pictures`)));
 
-app.post('/${version}/upload', upload.single('image'), uploadService.uploadImage);
+app.post(`/${version}/upload`, upload.single(`image`), uploadService.uploadImage);
 
-app.get('/${version}/uploads/:filename', storageService.showImageByName);
+app.get(`/${version}/uploads/:filename`, storageService.showImageByName);
 
 /**
  * Login endpoint to authenticate a user.
  * Creates a JWT token if authentication is successful.
  */
-app.post('/${version}/auth/login', loginRegisterService.login);
+app.post(`/${version}/auth/login`, loginRegisterService.login);
 
 /**
  * Registration endpoint to create a new user.
  * Hashes the password and saves user data to the database.
  */
-app.post('/${version}/register', loginRegisterService.register);
+app.post(`/${version}/register`, loginRegisterService.register);
 
-app.get('/${version}/verify', emailVerificationService.verifyEmail);
+app.get(`/${version}/verify`, emailVerificationService.verifyEmail);
 
-app.get('/${version}/auth/email-verified', loginRegisterService.emailVerified);
+app.get(`/${version}/auth/email-verified`, loginRegisterService.emailVerified);
 
-app.get('/${version}/auth/authorize', loginRegisterService.authorizeToken);
+app.get(`/${version}/auth/authorize`, loginRegisterService.authorizeToken);
 
 /**
  * Starts the server and listens on the specified port.
