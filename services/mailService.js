@@ -42,7 +42,7 @@ function sendMail (userId, username, email) {
     </a>
     <p>Der Link ist eine Stunde lang gültig.</p>
   `
-    };//TODO ändern zu url
+    };
 
     transporter.sendMail(mailOptions, (error, info) => {
         if (error) {

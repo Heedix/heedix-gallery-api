@@ -34,7 +34,7 @@ const getSignedImageUrl = async (req, res) => {
         if (result.status === 'error') {
             if (await imageQuery.isImageViewable(filename, null)) {
                 await authService.getSingleUseToken(filename).then(result => {
-                    const signedUrl = `${req.protocol}://${req.get('host')}/api/images/${filename}?token=${result}`;
+                    const signedUrl = `${req.protocol}://${req.get('host')}/v1/images/${filename}?token=${result}`;//TODO: Change
                     res.json({signedUrl});
                 })
             } else {
@@ -43,7 +43,7 @@ const getSignedImageUrl = async (req, res) => {
         } else {
             if (result.permissionLevel > 5 || await imageQuery.isImageViewable(filename, result.userId)) {
                 await authService.getSingleUseToken(filename).then(result => {
-                    const signedUrl = `${req.protocol}://${req.get('host')}/api/images/${filename}?token=${result}`;
+                    const signedUrl = `${req.protocol}://${req.get('host')}/v1/images/${filename}?token=${result}`;//TODO: Change
                     res.json({signedUrl});
                 })
             } else {

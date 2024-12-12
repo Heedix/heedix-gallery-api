@@ -22,6 +22,8 @@ const path = require('path');
 
 const JWT_SECRET = process.env.JWT_SECRET
 
+const version = 'v1'
+
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
@@ -38,39 +40,39 @@ app.use(
 /**
  * Route to retrieve all images.
  */
-app.get('/api/images', imageService.getAllViewableImages);
+app.get(`/${version}/images`, imageService.getAllViewableImages);
 
-app.get('/api/images/:filename', storageService.getSignedImage);
+app.get(`/${version}/images/:filename`, storageService.getSignedImage);
 
-app.get('/api/getSignedImageUrl/:filename', storageService.getSignedImageUrl);
+app.get(`/${version}/getSignedImageUrl/:filename`, storageService.getSignedImageUrl);
 
-app.get('/api/account/images', imageService.getAccountImages)
+app.get(`/${version}/account/images`, imageService.getAccountImages)
 
-app.get('/api/account/folders', folderService.getAccountFolders)
+app.get(`/${version}/account/folders`, folderService.getAccountFolders)
 
-app.use('/api/account/profile-picture', express.static(path.join(__dirname, 'uploads/profile-pictures')));
+app.use(`/${version}/account/profile-picture`, express.static(path.join(__dirname, `uploads/profile-pictures`)));
 
-app.post('/api/upload', upload.single('image'), uploadService.uploadImage);
+app.post(`/${version}/upload`, upload.single(`image`), uploadService.uploadImage);
 
-app.get('/api/uploads/:filename', storageService.showImageByName);
+app.get(`/${version}/uploads/:filename`, storageService.showImageByName);
 
 /**
  * Login endpoint to authenticate a user.
  * Creates a JWT token if authentication is successful.
  */
-app.post('/api/auth/login', loginRegisterService.login);
+app.post(`/${version}/auth/login`, loginRegisterService.login);
 
 /**
  * Registration endpoint to create a new user.
  * Hashes the password and saves user data to the database.
  */
-app.post('/api/register', loginRegisterService.register);
+app.post(`/${version}/register`, loginRegisterService.register);
 
-app.get('/api/verify', emailVerificationService.verifyEmail);
+app.get(`/${version}/verify`, emailVerificationService.verifyEmail);
 
-app.get('/api/auth/email-verified', loginRegisterService.emailVerified);
+app.get(`/${version}/auth/email-verified`, loginRegisterService.emailVerified);
 
-app.get('/api/auth/authorize', loginRegisterService.authorizeToken);
+app.get(`/${version}/auth/authorize`, loginRegisterService.authorizeToken);
 
 /**
  * Starts the server and listens on the specified port.
