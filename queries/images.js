@@ -137,6 +137,7 @@ const addImageToDb = async (extractedData, userId) => {
         const query = `
             INSERT INTO images (
                 name,
+                visibility,
                 size,
                 height,
                 width,
@@ -157,12 +158,13 @@ const addImageToDb = async (extractedData, userId) => {
                 source
             )
             VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, NOW(), $18
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), $19
             )
             RETURNING image_id;
         `;
         const values = [
             extractedData.fileName,
+            extractedData.visibility,
             extractedData.fileSize,
             extractedData.height,
             extractedData.width,

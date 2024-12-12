@@ -17,7 +17,7 @@ const login = async(req, res) => {
         const isMatch = await bcrypt.compare(encryptedPassword, user.password);
 
         if (isMatch) {
-            const token = jwt.sign({ sub: user.userid, username: user.username}, JWT_SECRET, { expiresIn: '3h' });
+            const token = jwt.sign({ sub: user.userid, username: user.username}, JWT_SECRET, { expiresIn: '14d' });
             res.status(200).json({token: token, username: user.username});
         } else {
             res.status(400).json({errorCode: 'CREDENTIALS_INVALID', message: 'Username or password is incorrect.'});
