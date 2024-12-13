@@ -23,7 +23,7 @@ const uploadImage = async (req, res) => {
                     return res.status(400).json({message: 'File is not an image.'});
                 }
                 try {
-                    const extractedData = await getFileMetaData(req.file);
+                    const extractedData = await getFileMetaData(req.file, req.body);
                     const dbResult = await imageQuery.addImageToDb(extractedData, result.userId);
 
                     await storeImage(req.file, dbResult.image_id);
@@ -40,10 +40,11 @@ const uploadImage = async (req, res) => {
 
 }
 
-async function getFileMetaData(file) {
+async function getFileMetaData(file, imageData) {
     let requestData = [
         {key: 'height', tag: 'Image Height', method: 'value'},
         {key: 'width', tag: 'Image Width', method: 'value'},
+        {key: 'creationDate', tag: 'CreateDate', method: 'description'},
         {key: 'bitsPerSample', tag: 'Bits Per Sample', method: 'description'},
         {key: 'make', tag: 'Make', method: 'description'},
         {key: 'model', tag: 'Model', method: 'description'},
@@ -58,26 +59,27 @@ async function getFileMetaData(file) {
     ];
 
     let tags;
+
+    imageData.name ? imageData.fileName = imageData.name : imageData.fileName = file.originalname;
+    imageData.fileSize = file.size;
+    imageData.fileExt = path.extname(file.originalname);
+
     try {
         tags = ExifReader.load(file.buffer);
-    } catch (error) {}
-
-    let extractedData = [];
-
-    extractedData.fileExt = path.extname(file.originalname);
-    extractedData.fileName = file.originalname;
-    extractedData.fileSize = file.size;
-    for (const key of requestData) {
-        try {
-            extractedData[key.key] = tags[key.tag][key.method];
-        } catch (error) {
-            extractedData[key.key] = null;
+        for (const key of requestData) {
+            if (imageData[key] == null) {
+                try {
+                    imageData[key.key] = tags[key.tag][key.method];
+                } catch (error) {
+                    imageData[key.key] = null;
+                }
+            } else {
+                imageData[key.key] = null
+            }
         }
-    }
-    try {
-        extractedData.dateTimeOriginal = extractedData.dateTimeOriginal.replace(/:/, '-').replace(/:/, '-');
     } catch (error) {}
-    return extractedData;
+
+    return imageData;
 }
 
 async function storeImage(file, imageId) {
