@@ -60,7 +60,6 @@ async function getFileMetaData(file, imageData) {
 
     let tags;
 
-    console.log(imageData);
     imageData.name ? imageData.fileName = imageData.name : imageData.fileName = file.originalname;
     imageData.fileSize = file.size;
     imageData.fileExt = path.extname(file.originalname);
