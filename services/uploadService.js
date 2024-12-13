@@ -21,11 +21,10 @@ const uploadImage = async (req, res) => {
                     path.extname(req.file.originalname) !== '.jpeg' &&
                     path.extname(req.file.originalname) !== '.png') {
                     return res.status(400).json({message: 'File is not an image.'});
+                } else if (req.file.size > 5242880) {
+                    return res.status(400).json({message: 'File is too large. Max file size is 5MB.'});
                 }
                 try {
-                    if (req.file.size > 5242880) {
-                        return res.status(400).json({message: 'File is too large. Max file size is 5MB.'});
-                    }
                     const extractedData = await getFileMetaData(req.file, req.body);
                     const dbResult = await imageQuery.addImageToDb(extractedData, result.userId);
 
