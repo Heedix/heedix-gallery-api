@@ -17,9 +17,9 @@ const uploadImage = async (req, res) => {
                 if (!req.file) {
                     return res.status(400).json({message: 'No file uploaded.'});
                 } else if (
-                    path.extname(req.file.originalname) !== '.jpg' &&
+                    (path.extname(req.file.originalname) !== '.jpg' &&
                     path.extname(req.file.originalname) !== '.jpeg' &&
-                    path.extname(req.file.originalname) !== '.png') {
+                    path.extname(req.file.originalname) !== '.png') || !req.file.mimetype.startsWith('image')) {
                     return res.status(400).json({message: 'File is not an image.'});
                 } else if (req.file.size > 5242880) {
                     return res.status(400).json({message: 'File is too large. Max file size is 5MB.'});

@@ -3,7 +3,6 @@ const nodemailer = require('nodemailer');
 const SITE_URL = process.env.SITE_URL;
 const JWT_SECRET = process.env.JWT_SECRET;
 const MAIL_PASSWORD =  process.env.MAIL_PASSWORD;
-console.log(MAIL_PASSWORD);
 
 const jwt = require('jsonwebtoken');
 
