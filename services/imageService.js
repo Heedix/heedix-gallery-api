@@ -18,7 +18,7 @@ const path = require("path");
  */
 
 const getAllViewableImages =  async (request, response) => {
-    console.log('image abfrage von' + request.ip)
+    console.log('image abfrage von: $1\n time: $2', request.ip, new Date().toLocaleString());
     await authService.authorizeToken(request.headers.authorization).then(async result => {
         if (result.status === 'error') {
             response.status(200).json(await imageQuery.getPublicImages());
