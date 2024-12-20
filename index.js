@@ -37,6 +37,8 @@ app.use(
     })
 );
 
+app.set('trust proxy', true);
+
 /**
  * Route to retrieve all images.
  */
