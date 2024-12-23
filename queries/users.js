@@ -31,13 +31,28 @@ const addUserToDb = async (email, username, password) => {
         const result = await client.query(query, values);
 
         console.log("User added with ID:", result.rows[0].userid);
-        return result.rows[0];
+        return result.rows[0].userid;
     } catch (error) {
         console.log(error)
     } finally {
         client.release();
     }
 };
+
+const removeUserById = async (userId) => {
+    const client = await pool.connect();
+    try {
+        const query = `
+            DELETE FROM users
+            WHERE userid = $1
+        `;
+        await client.query(query, [userId]);
+    } catch (error) {
+        console.log(error)
+    } finally {
+        client.release();
+    }
+}
 
 const isUserVerified = async (userId) => {
     try {
@@ -77,6 +92,7 @@ module.exports = {
     getUserByUsername,
     getUserById,
     addUserToDb,
+    removeUserById,
     isUserVerified,
     verifyUser
 }
