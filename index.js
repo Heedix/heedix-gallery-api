@@ -52,6 +52,8 @@ app.get(`/${version}/account/images`, imageService.getAccountImages)
 
 app.get(`/${version}/account/folders`, folderService.getAccountFolders)
 
+app.get(`/${version}/account/folders/editable`, folderService.getAccountFoldersEditable)
+
 app.use(`/${version}/account/profile-picture`, express.static(path.join(__dirname, `uploads/profile-pictures`)));
 
 app.post(`/${version}/upload`, upload.single(`image`), uploadService.uploadImage);

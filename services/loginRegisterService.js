@@ -1,5 +1,6 @@
 const bcrypt = require("bcrypt");
 const userQuery = require("../queries/users");
+const folderQuery = require("../queries/folders");
 const jwt = require("jsonwebtoken");
 const authService = require("./authService");
 const imageQuery = require("../queries/images");
@@ -31,6 +32,7 @@ const login = async(req, res) => {
 
 const register = async(req, res) => {
     const {email, username, encryptedPassword} = req.body;
+    let userId
 
     try {
         const saltRounds = 10;
@@ -38,7 +40,9 @@ const register = async(req, res) => {
         const hashedPassword = await bcrypt.hash(encryptedPassword, saltRounds);
         console.log(hashedPassword);
 
-        let userId = await userQuery.addUserToDb(email, username, hashedPassword);
+        userId = await userQuery.addUserToDb(email, username, hashedPassword);
+
+        await folderQuery.addDraftFolderToDb(userId);
 
         mailService.sendMail(userId.userid, username ,email);
 
@@ -49,8 +53,9 @@ const register = async(req, res) => {
         } else if (error.detail.includes('username')) {
             res.status(400).send({ errorCode: 'USERNAME_TAKEN', message: 'This username is already taken.' });
         } else {
-            res.status(500).send({ message: 'An unexpected error occurred .' });
+            res.status(500).send({ message: 'An unexpected error occurred .' }); //TODO: add deletion when failed
         }
+        await userQuery.removeUserById(userId);
         console.log(error.detail);
     }
 }

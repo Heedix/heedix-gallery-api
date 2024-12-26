@@ -16,6 +16,17 @@ const getAccountFolders = async (request, response) => {
     });
 }
 
+const getAccountFoldersEditable = async (request, response) => {
+    await authService.authorizeToken(request.headers.authorization).then(async result => {
+        if (result.status === 'error') {
+            response.status(400).json({message: 'Access denied'});
+        } else {
+            response.status(200).json(await folderQuery.getAccountFoldersEditable(result.userId));
+        }
+    });
+}
+
 module.exports = {
-    getAccountFolders
+    getAccountFolders,
+    getAccountFoldersEditable
 }

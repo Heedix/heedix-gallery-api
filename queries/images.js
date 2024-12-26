@@ -72,7 +72,7 @@ async function isImageViewable(source, userId) {
         SELECT source
         FROM images
         WHERE source = $1
-          AND (($2 = ANY (viewers) or owner = $2) OR visibility = 'Public' OR visibility = 'Not-Listed')
+          AND ($2 = ANY (viewers) OR $2 = ANY (editors) OR owner = $2 OR visibility = 'Public' OR visibility = 'Not-Listed')
     `;
     try {
         const result = await pool.query(query, [source, userId]);
@@ -109,6 +109,7 @@ async function getAccountImages(userId) {
         WHERE visibility = 'Public'
            OR owner = $1
            OR $1 = ANY (viewers)
+           OR $1 = ANY (editors)
     `;
     try {
         const results = await pool.query(query, [userId]);
