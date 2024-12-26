@@ -19,8 +19,8 @@ async function getAccountFolders(userId) {
 
 async function getAccountFoldersEditable(userId) {
     const query = `
-        SELECT name, folder_id
-        FROM folders left join users on folders.owner = users.userid
+        SELECT name, deletable, folder_id
+        FROM folders
         WHERE owner = $1
            OR $1 = ANY (editors)
     `;
