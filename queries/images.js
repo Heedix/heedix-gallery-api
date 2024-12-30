@@ -159,7 +159,7 @@ const addImageToDb = async (extractedData, userId) => {
                 source
             )
             VALUES (
-                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), $19
+                $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, NOW(), $19, $20
             )
             RETURNING image_id;
         `;
@@ -182,7 +182,8 @@ const addImageToDb = async (extractedData, userId) => {
             extractedData.focalLengthIn35mmFilm,
             extractedData.lensModel,
             userId,
-            extractedData.fileExt
+            extractedData.fileExt,
+            extractedData.folder
         ];
         const result = await client.query(query, values);
 
