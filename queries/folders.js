@@ -68,7 +68,6 @@ async function addDraftFolderToDb(userId) {
 }
 
 async function isFolderEditable(folderId, userId) {
-    console.log("Checking if folder is editable by user:", folderId, userId);
     const query = `
         SELECT folder_id
         FROM folders
