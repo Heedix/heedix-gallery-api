@@ -19,7 +19,7 @@ async function getAccountFolders(userId) {
 
 async function getAccountFoldersEditable(userId) {
     const query = `
-        SELECT name, deletable, folder_id
+        SELECT name, deletable, folder_id, owner
         FROM folders
         WHERE owner = $1
            OR $1 = ANY (editors)
@@ -67,9 +67,26 @@ async function addDraftFolderToDb(userId) {
     }
 }
 
+async function isFolderEditable(folderId, userId) {
+    const query = `
+        SELECT folder_id
+        FROM folders
+        WHERE folder_id = $1
+          AND ($2 = ANY (editors) OR owner = $2)
+    `;
+    try {
+        const result = await pool.query(query, [folderId, userId]);
+        return !!result.rows[0];
+    } catch (error) {
+        console.error(error);
+        return false
+    }
+}
+
 module.exports = {
     getAccountFolders,
     getAccountFoldersEditable,
     getAllAccountFolders,
-    addDraftFolderToDb
+    addDraftFolderToDb,
+    isFolderEditable
 }

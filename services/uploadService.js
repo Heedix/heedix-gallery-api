@@ -5,6 +5,7 @@ const sharp = require('sharp');
 
 
 const imageQuery = require('../queries/images');
+const folderQuery = require('../queries/folders');
 const userQuery = require('../queries/users');
 const authService = require("./authService");
 
@@ -23,6 +24,8 @@ const uploadImage = async (req, res) => {
                     return res.status(400).json({message: 'File is not an image.'});
                 } else if (req.file.size > 5242880) {
                     return res.status(400).json({message: 'File is too large. Max file size is 5MB.'});
+                } else if (!await folderQuery.isFolderEditable(req.body.folder, result.userId)) {
+                    return res.status(400).json({message: 'You do not have permission to upload to this folder.'});
                 }
                 try {
                     const extractedData = await getFileMetaData(req.file, req.body);
