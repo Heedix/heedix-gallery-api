@@ -20,7 +20,7 @@ const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const path = require('path');
 
-const JWT_SECRET = process.env.JWT_SECRET
+const SITE_URL = process.env.SITE_URL;
 
 const version = 'v1'
 
@@ -31,7 +31,7 @@ app.options('*', cors())
 app.use(express.json());
 app.use(
     cors({
-        origin: "*",
+        origin: SITE_URL,
         credentials: true,
         allowedHeaders: true,
     })
