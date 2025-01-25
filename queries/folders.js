@@ -5,9 +5,9 @@ async function getAccountFolders(userId) {
     const query = `
         SELECT name, thumbnailsource, visibility, creation_date_time, username
         FROM folders left join users on folders.owner = users.userid
-        WHERE visibility = 'Public'
-           OR owner = $1
+        WHERE owner = $1
            OR $1 = ANY (viewers)
+           OR $1 = ANY (editors)
     `;
     try {
         const results = await pool.query(query, [userId]);
