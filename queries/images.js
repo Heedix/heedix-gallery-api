@@ -106,8 +106,7 @@ async function getAccountImages(userId) {
     const query = `
         SELECT name, source, downloads, visibility, upload_date_time, username
         FROM images left join users on images.owner = users.userid
-        WHERE visibility = 'Public'
-           OR owner = $1
+        WHERE owner = $1
            OR $1 = ANY (viewers)
            OR $1 = ANY (editors)
     `;
