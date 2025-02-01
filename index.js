@@ -42,6 +42,10 @@ app.set('trust proxy', true);
 /**
  * Route to retrieve all images.
  */
+app.get(`/${version}/health`, (req, res) => {
+    res.status(200).json({message: 'Server is running.'})
+});
+
 app.get(`/${version}/images`, imageService.getAllViewableImages);
 
 app.get(`/${version}/images/:filename`, storageService.getSignedImage);
