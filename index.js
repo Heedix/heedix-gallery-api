@@ -31,7 +31,7 @@ app.options('*', cors())
 app.use(express.json());
 app.use(
     cors({
-        origin: `*${SITE_URL}`,
+        origin: SITE_URL,
         credentials: true,
         allowedHeaders: true,
     })
