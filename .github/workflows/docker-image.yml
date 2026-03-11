@@ -46,8 +46,8 @@ jobs:
           cat ${{ secrets.WORK_DIR }}/.env &&
           echo ${{ secrets.PAT }} | docker login ghcr.io -u heedix --password-stdin &&
           cd ${{ secrets.WORK_DIR }} &&
-          docker-compose pull &&
-          docker-compose --env-file .env up -d &&
+          docker compose pull &&
+          docker compose --env-file .env up -d &&
           exit"
       - name: Clean up
         run: rm -rf ~/.ssh
