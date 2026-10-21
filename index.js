@@ -21,21 +21,24 @@ const multer = require('multer');
 const path = require('path');
 
 const SITE_URL = process.env.SITE_URL;
+const isDevelopment = process.env.NODE_ENV === 'development';
+const corsOptions = {
+    origin: (origin, callback) => {
+        const isLocalOrigin = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(?::\d+)?$/.test(origin || '');
+        const isAllowed = !origin || origin === SITE_URL || (isDevelopment && isLocalOrigin);
+        callback(null, isAllowed);
+    },
+    credentials: true,
+    allowedHeaders: ['Authorization', 'Content-Type'],
+};
 
 const version = 'v1'
 
 const storage = multer.memoryStorage();
 const upload = multer({ storage: storage });
 
-app.options('*', cors())
+app.use(cors(corsOptions));
 app.use(express.json());
-app.use(
-    cors({
-        origin: SITE_URL,
-        credentials: true,
-        allowedHeaders: true,
-    })
-);
 
 app.set('trust proxy', true);
 
