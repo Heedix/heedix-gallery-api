@@ -11,6 +11,11 @@ const loginRegisterService = require('./services/loginRegisterService')
 const folderService = require('./services/folderService')
 const emailVerificationService = require('./services/emailVerificationService')
 const uploadService = require('./services/uploadService')
+const authService = require('./services/authService');
+const pool = require('./data-source');
+const {createSiteSettingsStore} = require('./queries/siteSettings');
+const {createSiteAccessRouter, siteAccessErrorHandler} = require('./services/siteAccessService');
+const settingsStore = createSiteSettingsStore(pool);
 
 const imageQuery = require('./queries/images')
 const userQuery = require('./queries/users')
@@ -41,6 +46,9 @@ app.use(cors(corsOptions));
 app.use(express.json());
 
 app.set('trust proxy', true);
+
+app.use(`/${version}`, createSiteAccessRouter({settingsStore,
+    authorizeToken: authService.authorizeToken, adminLogin: loginRegisterService.adminLogin}));
 
 /**
  * Route to retrieve all images.
@@ -88,6 +96,12 @@ app.get(`/${version}/auth/authorize`, loginRegisterService.authorizeToken);
 /**
  * Starts the server and listens on the specified port.
  */
-app.listen(port, () => {
-    console.log(`Server started on port ${port}`)
-})
+app.use(siteAccessErrorHandler);
+
+settingsStore.initialize().then(() => {
+    app.listen(port, () => console.log(`Server started on port ${port}`));
+}).catch(async error => {
+    console.error('Unable to initialize site settings:', error.message);
+    await pool.end();
+    process.exitCode = 1;
+});
